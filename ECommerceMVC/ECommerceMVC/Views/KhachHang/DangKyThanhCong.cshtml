@@ -1,0 +1,76 @@
+﻿@{
+    ViewData["Title"] = "Đăng ký thành công";
+}
+
+<div class="container-fluid py-5">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <!-- Icon Success -->
+                    <div class="mb-4">
+                        <div class="mx-auto d-flex align-items-center justify-content-center"
+                             style="width: 100px; height: 100px; background-color: #28a745; border-radius: 50%;">
+                            <i class="fas fa-check text-white" style="font-size: 50px;"></i>
+                        </div>
+                    </div>
+
+                    <!-- Tiêu đề -->
+                    <h1 class="display-4 text-success mb-4">Đăng ký thành công!</h1>
+
+                    <!-- Thông báo -->
+                    <div class="alert alert-success" role="alert">
+                        <h4 class="alert-heading">Chúc mừng!</h4>
+                        <p>Tài khoản của bạn đã được tạo thành công.</p>
+                        <hr>
+                        <p class="mb-0">Bạn sẽ được chuyển đến trang đăng nhập trong <strong id="countdown">3</strong> giây...</p>
+                    </div>
+
+                    <!-- Thông tin -->
+                    @if (TempData["UserName"] != null)
+                    {
+                        <div class="card border-secondary mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Thông tin tài khoản</h5>
+                                <p class="card-text">
+                                    <strong>Tên đăng nhập:</strong> @TempData["UserName"]<br>
+                                    <strong>Email:</strong> @TempData["Email"]
+                                </p>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Nút bấm -->
+                    <div class="d-grid gap-2">
+                        <a asp-controller="KhachHang" asp-action="DangNhap"
+                           class="btn btn-primary btn-lg rounded-pill py-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập ngay
+                        </a>
+                        <a asp-controller="Home" asp-action="Index"
+                           class="btn btn-outline-secondary btn-lg rounded-pill py-3">
+                            <i class="fas fa-home me-2"></i>Về trang chủ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Đếm ngược và tự động chuyển trang
+        let countdown = 3;
+        const countdownElement = document.getElementById('countdown');
+
+        const timer = setInterval(function() {
+            countdown--;
+            countdownElement.textContent = countdown;
+
+            if (countdown <= 0) {
+                clearInterval(timer);
+                window.location.href = '@Url.Action("DangNhap", "KhachHang")';
+            }
+        }, 1000);
+    </script>
+}

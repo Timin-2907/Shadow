@@ -1,0 +1,93 @@
+﻿@model OrderHistory
+
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng #" + Model.MaHD;
+}
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-file-invoice me-2"></i>Chi tiết đơn hàng #@Model.MaHD
+                </h4>
+                <a asp-action="OrderHistory" class="btn btn-light btn-sm">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Order Info -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5 class="border-bottom pb-2 mb-3">Thông tin đơn hàng</h5>
+                    <p><strong>Ngày đặt:</strong> @Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Trạng thái:</strong> <span class="badge bg-success">@Model.TrangThai</span></p>
+                    <p>
+                        <strong>Phương thức thanh toán:</strong>
+                        @if (Model.PhuongThucThanhToan == "VNPAY")
+                        {
+                            <span class="badge bg-primary">
+                                <i class="fas fa-credit-card"></i> VNPay
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">COD</span>
+                        }
+                    </p>
+                    @if (!string.IsNullOrEmpty(Model.VnPayTransactionId))
+                    {
+                        <p><strong>Mã giao dịch VNPay:</strong> <code>@Model.VnPayTransactionId</code></p>
+                    }
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="alert alert-success">
+                        <h5>Tổng tiền:</h5>
+                        <h3 class="text-danger mb-0">@Model.TongTien.ToString("N0") ₫</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products -->
+            <h5 class="border-bottom pb-2 mb-3">Sản phẩm</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th width="120">Đơn giá</th>
+                            <th width="100">Số lượng</th>
+                            <th width="150">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ChiTiet)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="~/Hinh/HangHoa/@item.Hinh"
+                                             alt="@item.TenHH"
+                                             style="width: 60px; height: 60px; object-fit: cover;"
+                                             class="me-3 rounded">
+                                        <span>@item.TenHH</span>
+                                    </div>
+                                </td>
+                                <td class="text-end">@item.DonGia.ToString("N0") ₫</td>
+                                <td class="text-center"><strong>@item.SoLuong</strong></td>
+                                <td class="text-end fw-bold text-danger">@item.ThanhTien.ToString("N0") ₫</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Tổng cộng:</strong></td>
+                            <td class="text-end fw-bold text-danger fs-5">@Model.TongTien.ToString("N0") ₫</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

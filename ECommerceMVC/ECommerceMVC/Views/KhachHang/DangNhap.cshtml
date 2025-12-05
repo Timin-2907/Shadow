@@ -1,0 +1,43 @@
+﻿@model ECommerceMVC.ViewModels.LoginVM
+@{
+	ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="container-fluid py-5">
+	<div class="container py-5">
+		<h1 class="mb-4">Đăng nhập</h1>
+		<form asp-action="DangNhap" asp-route-returnurl="@ViewBag.ReturnUrl">
+			<div class="text-danger" asp-validation-summary="ModelOnly"></div>
+			<div class="row">
+				<div class="col-md-12 col-lg-6">
+					<div class="form-item w-100">
+						<label asp-for="UserName" class="form-label my-3"></label><sup>*</sup>
+						<input asp-for="UserName" class="form-control">
+						<span asp-validation-for="UserName" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-12 col-lg-6">
+					<label asp-for="Password" class="form-label my-3"></label><sup>*</sup>
+					<input asp-for="Password" class="form-control">
+					<span asp-validation-for="Password" class="text-danger"></span>
+				</div>
+			</div>
+			<div class="row g-4 text-center align-items-center justify-content-center pt-4">
+				<button type="submit" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary">
+					Đăng nhập
+				</button>
+				<div class="mt-3">
+					<a asp-controller="KhachHang" asp-action="QuenMatKhau">Quên mật khẩu?</a>
+					<span class="mx-2">|</span>
+					<a asp-controller="KhachHang" asp-action="DangKy">Đăng ký tài khoản</a>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+}

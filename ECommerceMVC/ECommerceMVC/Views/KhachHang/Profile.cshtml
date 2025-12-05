@@ -1,0 +1,78 @@
+﻿@{
+    ViewData["Title"] = "Tài khoản";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-user-circle fa-4x text-primary"></i>
+                    </div>
+                    <h5 class="card-title text-center">@User.Identity.Name</h5>
+                    <hr>
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <a asp-action="Profile" class="text-decoration-none">
+                                <i class="fas fa-user me-2"></i> Thông tin tài khoản
+                            </a>
+                        </li>
+                        <li class="mb-3">
+                            <a asp-action="OrderHistory" class="text-decoration-none">
+                                <i class="fas fa-shopping-bag me-2"></i> Đơn hàng của tôi
+                            </a>
+                        </li>
+                        <li class="mb-3">
+                            <a asp-action="DangXuat" class="text-decoration-none text-danger">
+                                <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user me-2"></i>Thông tin tài khoản</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Xin chào <strong>@User.Identity.Name</strong>!
+                    </div>
+                    <p class="lead">Quản lý thông tin và đơn hàng của bạn tại đây.</p>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shopping-bag fa-3x text-primary mb-3"></i>
+                                    <h5>Đơn hàng</h5>
+                                    <a asp-action="OrderHistory" class="btn btn-primary btn-sm">
+                                        Xem đơn hàng
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shopping-cart fa-3x text-success mb-3"></i>
+                                    <h5>Tiếp tục mua sắm</h5>
+                                    <a asp-controller="HangHoa" asp-action="Index" class="btn btn-success btn-sm">
+                                        Khám phá
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
