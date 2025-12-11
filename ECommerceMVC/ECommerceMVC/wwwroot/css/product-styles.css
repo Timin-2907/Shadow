@@ -1,0 +1,393 @@
+﻿/* product-styles.css - Tối ưu hiển thị sản phẩm và hình ảnh */
+
+/* ===== PRODUCT GRID ===== */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    padding: 20px 0;
+    transition: opacity 0.3s ease;
+}
+
+    .product-grid.loading {
+        pointer-events: none;
+        position: relative;
+    }
+
+        .product-grid.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+/* ===== PRODUCT CARD ===== */
+.product-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    /* ===== IMAGE OPTIMIZATION ===== */
+    .product-card .product-image {
+        position: relative;
+        width: 100%;
+        padding-top: 100%; /* Tỷ lệ 1:1 */
+        overflow: hidden;
+        background: #f5f5f5;
+    }
+
+        .product-card .product-image img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+            /* Lazy loading placeholder */
+            .product-card .product-image img.lazy {
+                filter: blur(10px);
+                opacity: 0.6;
+            }
+
+            .product-card .product-image img.loaded {
+                filter: blur(0);
+                opacity: 1;
+            }
+
+    .product-card:hover .product-image img {
+        transform: scale(1.05);
+    }
+
+    /* Loading skeleton */
+    .product-card .product-image::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        z-index: 1;
+    }
+
+    .product-card .product-image img.loaded ~ ::before {
+        display: none;
+    }
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* ===== PRODUCT INFO ===== */
+.product-card .product-info {
+    padding: 16px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card .product-category {
+    font-size: 12px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.product-card .product-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 44px;
+}
+
+    .product-card .product-name a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+        .product-card .product-name a:hover {
+            color: #82c43c;
+        }
+
+.product-card .product-price {
+    font-size: 20px;
+    font-weight: 700;
+    color: #e74c3c;
+    margin: auto 0 12px 0;
+}
+
+.product-card .product-old-price {
+    font-size: 14px;
+    color: #999;
+    text-decoration: line-through;
+    margin-left: 8px;
+}
+
+/* ===== FILTER SIDEBAR ===== */
+.filter-sidebar {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.filter-section {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #eee;
+}
+
+    .filter-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    .filter-section h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #333;
+    }
+
+    .filter-section label {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+        .filter-section label:hover {
+            color: #82c43c;
+        }
+
+    .filter-section input[type="radio"],
+    .filter-section input[type="checkbox"] {
+        margin-right: 8px;
+        cursor: pointer;
+    }
+
+/* Price range inputs */
+.price-range-inputs {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 12px;
+}
+
+    .price-range-inputs input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .price-range-inputs span {
+        color: #999;
+    }
+
+/* Filter buttons */
+.filter-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-apply-filter,
+.btn-reset-filter {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-apply-filter {
+    background: #82c43c;
+    color: white;
+}
+
+    .btn-apply-filter:hover {
+        background: #6fa832;
+    }
+
+.btn-reset-filter {
+    background: #f5f5f5;
+    color: #666;
+}
+
+    .btn-reset-filter:hover {
+        background: #e0e0e0;
+    }
+
+/* ===== SORT DROPDOWN ===== */
+.sort-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+    .sort-container label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .sort-container select {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        background: white;
+        min-width: 200px;
+    }
+
+/* ===== PAGINATION ===== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 40px;
+}
+
+    .pagination a,
+    .pagination span {
+        padding: 8px 14px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #333;
+        transition: all 0.2s;
+    }
+
+        .pagination a:hover {
+            background: #82c43c;
+            color: white;
+            border-color: #82c43c;
+        }
+
+    .pagination .active {
+        background: #82c43c;
+        color: white;
+        border-color: #82c43c;
+    }
+
+    .pagination .disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+    }
+
+    .filter-sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 300px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+    }
+
+        .filter-sidebar.active {
+            left: 0;
+        }
+
+    .product-card .product-name {
+        font-size: 14px;
+    }
+
+    .product-card .product-price {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+/* ===== WEBP SUPPORT ===== */
+.webp .product-card .product-image img {
+    /* Browser sẽ tự động chọn WebP nếu hỗ trợ */
+}
+
+/* Picture element optimization */
+.product-card picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Aspect ratio box technique */
+.aspect-ratio-box {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%; /* 1:1 ratio */
+}
+
+    .aspect-ratio-box > * {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }

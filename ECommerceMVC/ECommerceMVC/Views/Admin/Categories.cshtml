@@ -1,0 +1,354 @@
+﻿@model IEnumerable<ECommerceMVC.Data.Loai>
+
+@{
+    ViewData["Title"] = "Quản Lý Danh Mục";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f6fa;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 260px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            color: white;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+            .sidebar-header h2 {
+                font-size: 24px;
+            }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+            .menu-item:hover {
+                background: rgba(255,255,255,0.15);
+                color: white;
+            }
+
+            .menu-item.active {
+                background: rgba(255,255,255,0.2);
+                color: white;
+            }
+
+            .menu-item i {
+                width: 24px;
+                margin-right: 15px;
+                font-size: 18px;
+            }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .page-title h1 {
+            font-size: 28px;
+            color: #333;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .btn-warning {
+            background: #feca57;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ee5a6f;
+            color: white;
+        }
+
+        .table-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f5f6fa;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-primary {
+            background: #e3e7ff;
+            color: #667eea;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        @@media (max-width: 768px) {
+            .main-content
+
+        {
+            margin-left: 0;
+            padding: 15px;
+        }
+
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>Admin Panel</h2>
+        </div>
+        <div class="menu">
+            <a href="@Url.Action("Index", "Admin")" class="menu-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="@Url.Action("Products", "Admin")" class="menu-item">
+                <i class="fas fa-box"></i>
+                <span>Sản Phẩm</span>
+            </a>
+            <a href="@Url.Action("Categories", "Admin")" class="menu-item active">
+                <i class="fas fa-tags"></i>
+                <span>Danh Mục</span>
+            </a>
+            <a href="@Url.Action("Suppliers", "Admin")" class="menu-item">
+                <i class="fas fa-truck"></i>
+                <span>Nhà Cung Cấp</span>
+            </a>
+            <a href="@Url.Action("Index", "HangHoas")" class="menu-item">
+                <i class="fas fa-store"></i>
+                <span>Quản Lý HH</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title">
+                <h1>Quản Lý Danh Mục</h1>
+            </div>
+            <a href="@Url.Action("Create", "Loais")" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Thêm Danh Mục
+            </a>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <div class="table-section">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã Loại</th>
+                        <th>Tên Danh Mục</th>
+                        <th>Mô Tả</th>
+                        <th>Số Sản Phẩm</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr id="row-@item.MaLoai">
+                                <td><strong>@item.MaLoai</strong></td>
+                                <td>@item.TenLoai</td>
+                                <td>@item.MoTa</td>
+                                <td>
+                                    <span class="badge badge-primary">
+                                        @item.HangHoas.Count sản phẩm
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="@Url.Action("Edit", "Loais", new { id = item.MaLoai })" class="btn btn-warning btn-sm" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button onclick="deleteCategory(@item.MaLoai)" class="btn btn-danger btn-sm" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-inbox" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i>
+                                <p style="color: #999;">Không có danh mục nào</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+
+            alertContainer.innerHTML = `
+                <div class="alert ${alertClass}">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    ${message}
+                </div>
+            `;
+
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 3000);
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('Bạn có chắc muốn xóa danh mục này?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('@Url.Action("DeleteCategory", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: id })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    document.getElementById('row-' + id).remove();
+                } else {
+                    showAlert(result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Có lỗi xảy ra: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
