@@ -1,0 +1,331 @@
+﻿@{
+    ViewData["Title"] = "Gửi Email Quảng Cáo Sản Phẩm";
+    var products = ViewBag.Products as List<ECommerceMVC.Data.HangHoa>;
+    var vouchers = ViewBag.Vouchers as List<ECommerceMVC.Data.Voucher>;
+    var subscribers = ViewBag.Subscribers as IEnumerable<dynamic>
+                    ?? Enumerable.Empty<dynamic>();
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f6fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px 15px;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            }
+
+        .product-preview {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+            .product-preview img {
+                max-width: 200px;
+                height: auto;
+                border-radius: 8px;
+            }
+
+        .preview-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .email-preview {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="mb-4">
+            <a href="/Admin/Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+            </a>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="fas fa-check-circle"></i> @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-envelope"></i> Gửi Email Quảng Cáo Sản Phẩm</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="SendProductPromotion" method="post" id="emailForm">
+                    <div class="row">
+                        <!-- Chọn sản phẩm -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-box text-primary"></i> Chọn sản phẩm <span class="text-danger">*</span>
+                                </label>
+                                <select name="ProductId" id="productSelect" class="form-select" required>
+                                    <option value="">-- Chọn sản phẩm --</option>
+                                    @if (products != null)
+                                    {
+                                        @foreach (var product in products)
+                                        {
+                                            <option value="@product.MaHh"
+                                                    data-name="@product.TenHh"
+                                                    data-price="@product.DonGia"
+                                                    data-image="@product.Hinh"
+                                                    data-desc="@product.MoTaDonVi">
+                                                @product.TenHh - @((product.DonGia ?? 0).ToString("N0"))₫
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Preview sản phẩm -->
+                            <div id="productPreview" class="product-preview d-none">
+                                <h6 class="mb-3"><i class="fas fa-eye"></i> Xem trước sản phẩm</h6>
+                                <div class="d-flex gap-3">
+                                    <img id="previewImage" src="" alt="" />
+                                    <div>
+                                        <h5 id="previewName"></h5>
+                                        <p id="previewDesc" class="text-muted"></p>
+                                        <div class="mb-2">
+                                            <span class="text-decoration-line-through text-muted" id="previewOriginalPrice"></span>
+                                        </div>
+                                        <div class="fs-4 fw-bold text-danger" id="previewSalePrice"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Giảm giá và Voucher -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-percent text-success"></i> Phần trăm giảm giá
+                                </label>
+                                <input type="number" name="DiscountPercent" id="discountPercent" class="form-control" min="0" max="100" value="0" />
+                                <small class="text-muted">Để 0 nếu không giảm giá trực tiếp</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-ticket text-warning"></i> Mã Voucher (tùy chọn)
+                                </label>
+                                <select name="VoucherCode" class="form-select">
+                                    <option value="">-- Không sử dụng voucher --</option>
+                                    @if (vouchers != null)
+                                    {
+                                        @foreach (var voucher in vouchers)
+                                        {
+                                            <option value="@voucher.Code">
+                                                @voucher.Code - Giảm @voucher.DiscountPercent% (HSD: @voucher.NgayKetThuc.ToString("dd/MM/yyyy"))
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                                <small class="text-muted">Voucher sẽ được hiển thị trong email</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <!-- Danh sách email -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="mb-3"><i class="fas fa-users"></i> Người nhận</h5>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="SendToAll" id="sendToAll" />
+                                <label class="form-check-label" for="sendToAll">
+                                    <strong>Gửi cho tất cả khách hàng</strong>
+                                </label>
+                            </div>
+                            <div id="subscriberSection">
+                                <label class="form-label">Chọn người nhận</label>
+
+                                <div class="border rounded p-3" style="max-height:300px; overflow-y:auto">
+                                    @foreach (var sub in subscribers)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input subscriber-checkbox"
+                                                   type="checkbox"
+                                                   value="@sub.Email" />
+
+                                            <label class="form-check-label">
+                                                <strong>@sub.HoTen</strong> – @sub.Email
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div id="emailListSection">
+                                <label class="form-label">
+                                    Danh sách email <span class="text-danger">*</span>
+                                </label>
+                                <textarea name="EmailList" id="emailList" class="form-control" rows="5"
+                                          placeholder="Nhập email, phân cách bằng dấu phẩy, chấm phẩy hoặc xuống dòng&#10;Ví dụ:&#10;email1@example.com, email2@example.com&#10;email3@example.com"></textarea>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i> Có thể nhập nhiều email, phân cách bằng dấu phẩy (,) hoặc xuống dòng
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-paper-plane"></i> Gửi Email
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-lg" onclick="showPreview()">
+                            <i class="fas fa-eye"></i> Xem trước
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Preview sản phẩm khi chọn
+        $('#productSelect').change(function() {
+            const selected = $(this).find(':selected');
+            if (selected.val()) {
+                const name = selected.data('name');
+                const price = parseFloat(selected.data('price'));
+                const image = selected.data('image');
+                const desc = selected.data('desc');
+
+                $('#previewImage').attr('src', '/Hinh/HangHoa/' + image);
+                $('#previewName').text(name);
+                $('#previewDesc').text(desc);
+                $('#previewOriginalPrice').text(formatCurrency(price));
+
+                updateSalePrice();
+                $('#productPreview').removeClass('d-none');
+            } else {
+                $('#productPreview').addClass('d-none');
+            }
+        });
+
+        // Cập nhật giá sale khi thay đổi discount
+        $('#discountPercent').on('input', function() {
+            updateSalePrice();
+        });
+
+        function updateSalePrice() {
+            const selected = $('#productSelect').find(':selected');
+            if (selected.val()) {
+                const originalPrice = parseFloat(selected.data('price'));
+                const discount = parseFloat($('#discountPercent').val()) || 0;
+                const salePrice = originalPrice * (1 - discount / 100);
+
+                $('#previewSalePrice').text(formatCurrency(salePrice));
+
+                if (discount > 0) {
+                    $('#previewOriginalPrice').show();
+                } else {
+                    $('#previewOriginalPrice').hide();
+                }
+            }
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(value);
+        }
+
+        // Toggle email list section
+        $('#sendToAll').change(function() {
+            if ($(this).is(':checked')) {
+                $('#emailListSection').hide();
+                $('#emailList').removeAttr('required');
+            } else {
+                $('#emailListSection').show();
+                $('#emailList').attr('required', 'required');
+            }
+        });
+
+        function showPreview() {
+            alert('Chức năng xem trước email sẽ được triển khai sau!');
+        }
+    </script>
+</body>
+</html>

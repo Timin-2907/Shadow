@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ECommerceMVC.Data;
 using ECommerceMVC.Helpers;
+using ECommerceMVC.Services;              // ✅ THÊM
 using ECommerceMVC.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -15,11 +16,18 @@ namespace ECommerceMVC.Controllers
     {
         private readonly ShoeContext db;
         private readonly IMapper _mapper;
+        private readonly INewsletterService _newsletterService; // ✅ THÊM
 
-        public KhachHangController(ShoeContext context, IMapper mapper)
+        // ✅ CẬP NHẬT CONSTRUCTOR
+        public KhachHangController(
+            ShoeContext context,
+            IMapper mapper,
+            INewsletterService newsletterService
+        )
         {
             db = context;
             _mapper = mapper;
+            _newsletterService = newsletterService;
         }
 
         #region Register
@@ -30,7 +38,11 @@ namespace ECommerceMVC.Controllers
         }
 
         [HttpPost]
-        public IActionResult DangKy(RegisterVM model, IFormFile Hinh)
+        public async Task<IActionResult> DangKy(
+            RegisterVM model,
+            IFormFile Hinh,
+            bool DangKyNhanTin = false   // ✅ checkbox newsletter
+        )
         {
             if (ModelState.IsValid)
             {
@@ -41,6 +53,7 @@ namespace ECommerceMVC.Controllers
                     khachHang.MatKhau = model.MatKhau.ToMd5Hash(khachHang.RandomKey);
                     khachHang.HieuLuc = true;
                     khachHang.VaiTro = 0;
+                    khachHang.DangKyNhanTin = DangKyNhanTin; // ✅ LƯU DB
 
                     if (Hinh != null)
                     {
@@ -48,14 +61,35 @@ namespace ECommerceMVC.Controllers
                     }
 
                     db.Add(khachHang);
-                    db.SaveChanges();
-                    return RedirectToAction("Index", "HangHoa");
+                    await db.SaveChangesAsync();
+
+                    // ✅ ĐĂNG KÝ NEWSLETTER
+                    if (DangKyNhanTin)
+                    {
+                        await _newsletterService.Subscribe(
+                            model.Email,
+                            model.HoTen,
+                            khachHang.MaKh
+                        );
+                    }
+
+                    TempData["Success"] = "Đăng ký thành công!";
+                    TempData["UserName"] = khachHang.MaKh;
+                    TempData["Email"] = khachHang.Email;
+
+                    return RedirectToAction("DangKyThanhCong");
                 }
                 catch (Exception ex)
                 {
                     ModelState.AddModelError("", "Có lỗi: " + ex.Message);
                 }
             }
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult DangKyThanhCong()
+        {
             return View();
         }
         #endregion
@@ -72,49 +106,47 @@ namespace ECommerceMVC.Controllers
         public async Task<IActionResult> DangNhap(LoginVM model, string? ReturnUrl)
         {
             ViewBag.ReturnUrl = ReturnUrl;
+
             if (ModelState.IsValid)
             {
-                var khachHang = db.KhachHangs.SingleOrDefault(kh => kh.MaKh == model.UserName);
+                var khachHang = db.KhachHangs
+                    .SingleOrDefault(kh => kh.MaKh == model.UserName);
+
                 if (khachHang == null)
                 {
                     ModelState.AddModelError("loi", "Không có khách hàng này");
                 }
+                else if (!khachHang.HieuLuc)
+                {
+                    ModelState.AddModelError("loi", "Tài khoản đã bị khóa");
+                }
+                else if (khachHang.MatKhau != model.Password.ToMd5Hash(khachHang.RandomKey))
+                {
+                    ModelState.AddModelError("loi", "Sai thông tin đăng nhập");
+                }
                 else
                 {
-                    if (!khachHang.HieuLuc)
+                    var claims = new List<Claim>
                     {
-                        ModelState.AddModelError("loi", "Tài khoản đã bị khóa");
-                    }
-                    else
-                    {
-                        if (khachHang.MatKhau != model.Password.ToMd5Hash(khachHang.RandomKey))
-                        {
-                            ModelState.AddModelError("loi", "Sai thông tin đăng nhập");
-                        }
-                        else
-                        {
-                            var claims = new List<Claim> {
-                                new Claim(ClaimTypes.Email, khachHang.Email),
-                                new Claim(ClaimTypes.Name, khachHang.HoTen),
-                                new Claim(MySetting.CLAIM_CUSTOMERID, khachHang.MaKh),
-                                new Claim(ClaimTypes.Role, "Customer")
-                            };
+                        new Claim(ClaimTypes.Email, khachHang.Email),
+                        new Claim(ClaimTypes.Name, khachHang.HoTen),
+                        new Claim(MySetting.CLAIM_CUSTOMERID, khachHang.MaKh),
+                        new Claim(ClaimTypes.Role, "Customer")
+                    };
 
-                            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                    var claimsIdentity = new ClaimsIdentity(
+                        claims,
+                        CookieAuthenticationDefaults.AuthenticationScheme
+                    );
 
-                            await HttpContext.SignInAsync(claimsPrincipal);
+                    await HttpContext.SignInAsync(
+                        new ClaimsPrincipal(claimsIdentity)
+                    );
 
-                            if (Url.IsLocalUrl(ReturnUrl))
-                            {
-                                return Redirect(ReturnUrl);
-                            }
-                            else
-                            {
-                                return Redirect("/");
-                            }
-                        }
-                    }
+                    if (Url.IsLocalUrl(ReturnUrl))
+                        return Redirect(ReturnUrl);
+
+                    return Redirect("/");
                 }
             }
             return View();
@@ -134,15 +166,15 @@ namespace ECommerceMVC.Controllers
             return Redirect("/");
         }
 
+        #region Order History
         [Authorize]
         public IActionResult OrderHistory()
         {
-            var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
+            var customerId = User.Claims
+                .SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
 
             if (string.IsNullOrEmpty(customerId))
-            {
                 return RedirectToAction("DangNhap");
-            }
 
             var orders = db.HoaDons
                 .Include(h => h.MaTrangThaiNavigation)
@@ -167,12 +199,11 @@ namespace ECommerceMVC.Controllers
         [Authorize]
         public IActionResult OrderDetail(int id)
         {
-            var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
+            var customerId = User.Claims
+                .SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMERID)?.Value;
 
             if (string.IsNullOrEmpty(customerId))
-            {
                 return RedirectToAction("DangNhap");
-            }
 
             var order = db.HoaDons
                 .Include(h => h.ChiTietHds)
@@ -206,5 +237,6 @@ namespace ECommerceMVC.Controllers
 
             return View(order);
         }
+        #endregion
     }
 }

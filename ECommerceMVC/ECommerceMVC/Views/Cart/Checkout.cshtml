@@ -17,7 +17,7 @@
 <div class="container-fluid py-5">
 	<div class="container py-5">
 		<h1 class="mb-4">Billing details</h1>
-		<form asp-action="Checkout" asp-controller="Cart">
+		<form asp-action="Checkout" asp-controller="Cart" method="post" id="checkoutForm">
 			<div class="row g-5">
 				<div class="col-md-12 col-lg-6 col-xl-7">
 					<div class="form-check my-3">
@@ -26,23 +26,36 @@
 					</div>
 					<div class="form-item delivery-info">
 						<label class="form-label my-3">Người nhận hàng<sup>*</sup></label>
-						<input type="text" name="HoTen" class="form-control">
+						<input type="text" name="HoTen" id="HoTen" class="form-control" required>
 					</div>
 					<div class="form-item delivery-info">
 						<label class="form-label my-3">Địa chỉ nhận hàng<sup>*</sup></label>
-						<input type="text" name="DiaChi" class="form-control" placeholder="123 Lê Lợi, Quận 1">
+						<input type="text" name="DiaChi" id="DiaChi" class="form-control" placeholder="123 Lê Lợi, Quận 1" required>
 					</div>
 					<div class="form-item delivery-info">
 						<label class="form-label my-3">Điện thoại<sup>*</sup></label>
-						<input type="text" name="DienThoai" class="form-control">
+						<input type="text" name="DienThoai" id="DienThoai" class="form-control" required>
 					</div>
 					<div class="form-item mt-3">
-						<textarea name="GhiChu" class="form-control" spellcheck="false" cols="30" rows="11" placeholder="Ghi chú"></textarea>
+						<label class="form-label my-3">Ghi chú</label>
+						<textarea name="GhiChu" class="form-control" spellcheck="false" cols="30" rows="5" placeholder="Ghi chú"></textarea>
 					</div>
-					<input type="submit" name="payment" class="btn border-secondary text-uppercase text-primary w-100 mt-2" value="Đặt hàng (COD)">
-					<input type="submit" name="payment" class="btn border-secondary text-uppercase text-primary w-100 mt-2" value="Thanh toán VNPay">
+
+					<!-- Hidden input để lưu voucher code -->
+					<input type="hidden" name="VoucherCode" id="appliedVoucherInput" value="">
+
+					<!-- NÚT THANH TOÁN -->
+					<button type="submit" name="payment" value="COD" class="btn border-secondary text-uppercase text-primary w-100 mt-2">
+						<i class="fas fa-money-bill-wave"></i> Đặt hàng (COD)
+					</button>
+					<button type="submit" name="payment" value="Thanh toán VNPay" class="btn border-secondary text-uppercase text-primary w-100 mt-2">
+						<i class="fas fa-credit-card"></i> Thanh toán VNPay
+					</button>
+
+					<!-- PAYPAL BUTTON -->
 					<div id="paypal-button-container" class="form-item mt-3" style="max-width:1000px;"></div>
 				</div>
+
 				<div class="col-md-12 col-lg-6 col-xl-5">
 					<div class="table-responsive">
 						<table class="table">
@@ -65,98 +78,71 @@
 											</div>
 										</th>
 										<td class="py-5">@item.TenHH</td>
-										<td class="py-5">$@item.DonGia</td>
+										<td class="py-5">@item.DonGia.ToString("N0")₫</td>
 										<td class="py-5">@item.SoLuong</td>
-										<td class="py-5">@item.ThanhTien</td>
+										<td class="py-5">@item.ThanhTien.ToString("N0")₫</td>
 									</tr>
 								}
 								<tr>
-									<th scope="row">
-									</th>
-									<td class="py-5"></td>
-									<td class="py-5"></td>
-									<td class="py-5">
-										<p class="mb-0 text-dark py-3">Subtotal</p>
-									</td>
-									<td class="py-5">
-										<div class="py-3 border-bottom border-top">
-											<p class="mb-0 text-dark">$@Model.Sum(p => p.ThanhTien).ToString("#,##0.00")</p>
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<th scope="row">
-									</th>
-									<td class="py-5">
-										<p class="mb-0 text-dark py-4">Shipping</p>
-									</td>
-									<td colspan="3" class="py-5">
-										<div class="form-check text-start">
-											<input type="checkbox" class="form-check-input bg-primary border-0" id="Shipping-1" name="Shipping-1" value="Shipping">
-											<label class="form-check-label" for="Shipping-1">Free Shipping</label>
-										</div>
-										<div class="form-check text-start">
-											<input type="checkbox" class="form-check-input bg-primary border-0" id="Shipping-2" name="Shipping-1" value="Shipping">
-											<label class="form-check-label" for="Shipping-2">Flat rate: $15.00</label>
-										</div>
-										<div class="form-check text-start">
-											<input type="checkbox" class="form-check-input bg-primary border-0" id="Shipping-3" name="Shipping-1" value="Shipping">
-											<label class="form-check-label" for="Shipping-3">Local Pickup: $8.00</label>
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<th scope="row">
-									</th>
-									<td class="py-5">
-										<p class="mb-0 text-dark text-uppercase py-3">TOTAL</p>
-									</td>
-									<td class="py-5"></td>
-									<td class="py-5"></td>
-									<td class="py-5">
-										<div class="py-3 border-bottom border-top">
-											<p class="mb-0 text-dark">$135.00</p>
-										</div>
+									<td colspan="4" class="py-3 text-end"><strong>Tạm tính:</strong></td>
+									<td class="py-3">
+										<strong id="subtotal">@Model.Sum(p => p.ThanhTien).ToString("N0")₫</strong>
 									</td>
 								</tr>
 							</tbody>
 						</table>
 					</div>
-					<div class="row g-4 text-center align-items-center justify-content-center border-bottom py-3">
-						<div class="col-12">
-							<div class="form-check text-start my-3">
-								<input type="checkbox" class="form-check-input bg-primary border-0" id="Transfer-1" name="Transfer" value="Transfer">
-								<label class="form-check-label" for="Transfer-1">Direct Bank Transfer</label>
-							</div>
-							<p class="text-start text-dark">Make your payment directly into our bank account. Please use your Order ID as the payment reference. Your order will not be shipped until the funds have cleared in our account.</p>
+
+					<!-- VOUCHER SECTION -->
+					<div class="bg-light rounded p-4 mb-4">
+						<h5 class="mb-3">
+							<i class="fas fa-ticket-alt text-warning"></i> Mã giảm giá
+						</h5>
+						<div class="input-group">
+							<input type="text" id="voucherCode" class="form-control" placeholder="Nhập mã voucher (VD: GIAM10)">
+							<button type="button" class="btn btn-primary" id="btnApplyVoucher">
+								<i class="fas fa-check"></i> Áp dụng
+							</button>
 						</div>
-					</div>
-					<div class="row g-4 text-center align-items-center justify-content-center border-bottom py-3">
-						<div class="col-12">
-							<div class="form-check text-start my-3">
-								<input type="checkbox" class="form-check-input bg-primary border-0" id="Payments-1" name="Payments" value="Payments">
-								<label class="form-check-label" for="Payments-1">Check Payments</label>
-							</div>
-						</div>
-					</div>
-					<div class="row g-4 text-center align-items-center justify-content-center border-bottom py-3">
-						<div class="col-12">
-							<div class="form-check text-start my-3">
-								<input type="checkbox" class="form-check-input bg-primary border-0" id="Delivery-1" name="Delivery" value="Delivery">
-								<label class="form-check-label" for="Delivery-1">Cash On Delivery</label>
-							</div>
-						</div>
-					</div>
-					<div class="row g-4 text-center align-items-center justify-content-center border-bottom py-3">
-						<div class="col-12">
-							<div class="form-check text-start my-3">
-								<input type="checkbox" class="form-check-input bg-primary border-0" id="Paypal-1" name="Paypal" value="Paypal">
-								<label class="form-check-label" for="Paypal-1">Paypal</label>
+						<div id="voucherMessage" class="mt-2" style="display: none;"></div>
+
+						<!-- Hiển thị voucher đã áp dụng -->
+						<div id="appliedVoucherSection" class="mt-3 d-none">
+							<div class="alert alert-success d-flex justify-content-between align-items-center">
+								<div>
+									<strong id="appliedVoucherCode"></strong>
+									<p class="mb-0 small" id="appliedVoucherDesc"></p>
+								</div>
+								<button type="button" class="btn btn-sm btn-outline-danger" id="btnRemoveVoucher">
+									<i class="fas fa-times"></i>
+								</button>
 							</div>
 						</div>
 					</div>
-					<div class="row g-4 text-center align-items-center justify-content-center pt-4">
-						<button type="button" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary">Place Order</button>
+
+					<!-- Tổng thanh toán -->
+					<div class="bg-light rounded p-4">
+						<div class="d-flex justify-content-between mb-2">
+							<span>Tạm tính:</span>
+							<strong id="subtotalAmount">@Model.Sum(p => p.ThanhTien).ToString("N0")₫</strong>
+						</div>
+
+						<div class="d-flex justify-content-between mb-2 text-success d-none" id="discountRow">
+							<span>Giảm giá:</span>
+							<strong id="discountAmount">0₫</strong>
+						</div>
+
+						<div class="d-flex justify-content-between mb-2">
+							<span>Phí vận chuyển:</span>
+							<strong>Miễn phí</strong>
+						</div>
+
+						<hr>
+
+						<div class="d-flex justify-content-between mb-3">
+							<h5>Tổng cộng:</h5>
+							<h5 class="text-danger" id="finalAmount">@Model.Sum(p => p.ThanhTien).ToString("N0")₫</h5>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -165,51 +151,200 @@
 </div>
 <!-- Checkout Page End -->
 @section Scripts {
-	<script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.PaypalClientdId"></script>
+	@if (!string.IsNullOrEmpty(ViewBag.PaypalClientdId))
+	{
+		<script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.PaypalClientdId" data-sdk-integration-source="button-factory"></script>
+	}
 	<script>
+		// ============ BIẾN TOÀN CỤC ============
+		var appliedVoucherData = null;
+		var subtotalValue = @Model.Sum(p => p.ThanhTien);
+		var paypalClientId = '@ViewBag.PaypalClientdId';
+
 		$(document).ready(function () {
+			console.log('✅ Page loaded!');
+
+			// Xử lý checkbox "Giống thông tin khách hàng"
 			$("#GiongKhachHang").change(function () {
 				if ($(this).prop("checked")) {
 					$(this).val(true);
 					$(".delivery-info").addClass("d-none");
+					// Clear required khi ẩn
+					$("#HoTen, #DiaChi, #DienThoai").prop('required', false);
 				} else {
 					$(this).val(false);
 					$(".delivery-info").removeClass("d-none");
+					// Restore required
+					$("#HoTen, #DiaChi, #DienThoai").prop('required', true);
 				}
+			});
+
+			// ============ XỬ LÝ VOUCHER ============
+			$('#btnApplyVoucher').on('click', function() {
+				applyVoucher();
+			});
+
+			$('#voucherCode').on('keypress', function(e) {
+				if (e.which == 13) {
+					e.preventDefault();
+					applyVoucher();
+				}
+			});
+
+			$('#btnRemoveVoucher').on('click', function() {
+				removeVoucher();
 			});
 		});
 
-		paypal.Buttons({
-				  style: {
-		  layout: 'vertical',
-		  color:  'blue',
-		  shape:  'rect',
-		  label:  'paypal'
-			},
-			createOrder: (data, actions) => {
-				return fetch("/Cart/create-paypal-order", {
-					method: "post",
-				}).then((response) => {
-					if (!response.ok) {
-						return response.json().then(error => { throw error; });
-					}
+		// ============ HÀM XỬ LÝ VOUCHER ============
+		function applyVoucher() {
+			var code = $('#voucherCode').val().trim();
+			console.log('Voucher code:', code);
 
-					return response.json();
-				}).then((order) => order.id)
-				.catch(error => alert(error.message));
-			},
-			onApprove: (data, actions) => {
-				return fetch(`/Cart/capture-paypal-order?orderId=${data.orderID}`, {
-					method: "post",
-				}).then((response) => {
-					if (!response.ok) {
-						return response.json().then(error => { throw error; });
-					}
-
-					//Đổi địa chỉ tới action thông báo thành công
-					window.location.href = "/Cart/PaymentSuccess";
-				}).catch(error => alert(error.message));
+			if (!code) {
+				showVoucherMessage('Vui lòng nhập mã voucher', 'warning');
+				return;
 			}
-		}).render('#paypal-button-container');
+
+			showVoucherMessage('⏳ Đang kiểm tra voucher...', 'info');
+			$('#btnApplyVoucher').prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Đang kiểm tra...');
+
+			$.ajax({
+				url: '/Cart/ApplyVoucher',
+				type: 'POST',
+				contentType: 'application/json',
+				data: JSON.stringify({ voucherCode: code }),
+				success: function(result) {
+					console.log('API Response:', result);
+					$('#btnApplyVoucher').prop('disabled', false).html('<i class="fas fa-check"></i> Áp dụng');
+
+					if (result.success) {
+						appliedVoucherData = result;
+						updatePriceDisplay(result);
+						showAppliedVoucher(result);
+						showVoucherMessage('✅ ' + result.message, 'success');
+						$('#appliedVoucherInput').val(code);
+					} else {
+						showVoucherMessage('❌ ' + result.message, 'danger');
+					}
+				},
+				error: function(xhr, status, error) {
+					console.error('API Error:', error);
+					$('#btnApplyVoucher').prop('disabled', false).html('<i class="fas fa-check"></i> Áp dụng');
+
+					if (xhr.status === 404) {
+						showVoucherMessage('⚠️ Chức năng voucher chưa được cài đặt!', 'warning');
+					} else {
+						showVoucherMessage('❌ Có lỗi xảy ra. Vui lòng thử lại!', 'danger');
+					}
+				}
+			});
+		}
+
+		function removeVoucher() {
+			appliedVoucherData = null;
+			$('#voucherCode').val('');
+			$('#appliedVoucherInput').val('');
+			$('#appliedVoucherSection').addClass('d-none');
+			$('#discountRow').addClass('d-none');
+
+			$('#finalAmount').text(formatCurrency(subtotalValue));
+			$('#discountAmount').text('0₫');
+
+			showVoucherMessage('✅ Đã xóa mã giảm giá', 'info');
+		}
+
+		function showAppliedVoucher(data) {
+			$('#appliedVoucherCode').text(data.voucherCode);
+			$('#appliedVoucherDesc').text('Giảm ' + data.discountPercent + '% (tối đa ' + formatCurrency(data.maxDiscount || data.discountAmount) + ')');
+			$('#appliedVoucherSection').removeClass('d-none');
+		}
+
+		function updatePriceDisplay(data) {
+			$('#discountRow').removeClass('d-none');
+			$('#discountAmount').text('-' + formatCurrency(data.discountAmount));
+			$('#finalAmount').text(formatCurrency(data.finalAmount));
+		}
+
+		function showVoucherMessage(message, type) {
+			var $messageDiv = $('#voucherMessage');
+			$messageDiv.removeClass().addClass('alert alert-' + type + ' mt-2 mb-0');
+			$messageDiv.html(message);
+			$messageDiv.slideDown();
+
+			setTimeout(function() {
+				$messageDiv.slideUp();
+			}, 5000);
+		}
+
+		function formatCurrency(amount) {
+			return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
+		}
+
+		// ============ PAYPAL - CODE CŨ ============
+		if (typeof paypal !== 'undefined' && paypalClientId) {
+			console.log('✅ PayPal SDK loaded');
+			paypal.Buttons({
+				style: {
+					layout: 'vertical',
+					color: 'silver',
+					tagline: 'false'
+				},
+				createOrder: function(data, actions) {
+					return fetch("/Cart/create-paypal-order", {
+						method: "post",
+					}).then(function(response) {
+						if (!response.ok) {
+							return response.json().then(function(error) {
+								throw error;
+							});
+						}
+						return response.json();
+					}).then(function(order) {
+						return order.id;
+					}).catch(function(error) {
+						alert(error.message);
+					});
+				},
+				onApprove: function(data, actions) {
+					return fetch("/Cart/capture-paypal-order?orderId=" + data.orderID, {
+						method: "post",
+					}).then(function(response) {
+						if (!response.ok) {
+							return response.json().then(function(error) {
+								throw error;
+							});
+						}
+						window.location.href = "/Cart/PaymentSuccess";
+					}).catch(function(error) {
+						alert(error.message);
+					});
+				}
+			}).render('#paypal-button-container');
+		} else {
+			console.warn('⚠️ PayPal SDK not loaded or ClientId missing');
+			$('#paypal-button-container').html('<div class="alert alert-warning">PayPal chưa được cấu hình</div>');
+		}
 	</script>
+
+	<style>
+		#voucherMessage {
+			display: none;
+		}
+
+		.input-group .btn {
+			border-top-left-radius: 0;
+			border-bottom-left-radius: 0;
+		}
+
+		.spinner-border-sm {
+			width: 1rem;
+			height: 1rem;
+			border-width: 0.15em;
+		}
+
+		#discountRow {
+			color: #28a745 !important;
+		}
+	</style>
 }

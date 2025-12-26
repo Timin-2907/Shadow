@@ -24,13 +24,15 @@ public partial class HoaDon
 
     public string CachVanChuyen { get; set; } = null!;
 
-    public double PhiVanChuyen { get; set; }
+    public decimal PhiVanChuyen { get; set; }
 
     public int MaTrangThai { get; set; }
 
     public string? MaNv { get; set; }
 
     public string? GhiChu { get; set; }
+    public string? VoucherCode { get; set; }
+    public decimal VoucherDiscount { get; set; }
 
     public virtual ICollection<ChiTietHd> ChiTietHds { get; set; } = new List<ChiTietHd>();
     public string? VnpayTransactionId { get; set; }

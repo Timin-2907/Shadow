@@ -15,13 +15,13 @@ public partial class HangHoa
 
     public string? MoTaDonVi { get; set; }
 
-    public double? DonGia { get; set; }
+    public decimal? DonGia { get; set; }
 
     public string? Hinh { get; set; }
 
     public DateTime NgaySx { get; set; }
 
-    public double GiamGia { get; set; }
+    public decimal GiamGia { get; set; }
 
     public int SoLanXem { get; set; }
 

@@ -50,10 +50,12 @@ public partial class ShoeContext : DbContext
     public virtual DbSet<VChiTietHoaDon> VChiTietHoaDons { get; set; }
 
     public virtual DbSet<YeuThich> YeuThiches { get; set; }
+    public virtual DbSet<Voucher> Vouchers { get; set; }
 
-//    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//        => optionsBuilder.UseSqlServer("Data Source=LAPTOP-IBO76N7C\\SQLEXPRESS;Initial Catalog=Shoe;Integrated Security=True;Trust Server Certificate=True");
+
+    //    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+    //        => optionsBuilder.UseSqlServer("Data Source=LAPTOP-IBO76N7C\\SQLEXPRESS;Initial Catalog=Shoe;Integrated Security=True;Trust Server Certificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -155,7 +157,7 @@ public partial class ShoeContext : DbContext
             entity.ToTable("HangHoa");
 
             entity.Property(e => e.MaHh).HasColumnName("MaHH");
-            entity.Property(e => e.DonGia).HasDefaultValue(0.0);
+            entity.Property(e => e.DonGia).HasDefaultValue(0m);
             entity.Property(e => e.Hinh).HasMaxLength(50);
             entity.Property(e => e.MaNcc)
                 .HasMaxLength(50)

@@ -1,74 +1,146 @@
 ﻿<!-- Footer Start -->
 <div class="container-fluid bg-dark text-white-50 footer pt-5 mt-5">
     <div class="container py-5">
-        <div class="pb-4 mb-4" style="border-bottom: 1px solid rgba(226, 175, 24, 0.5) ;">
+
+        <!-- ===== NEWSLETTER SECTION (THAY THẾ PHẦN SUBSCRIBE CŨ) ===== -->
+        <div class="pb-4 mb-4" style="border-bottom: 1px solid rgba(226, 175, 24, 0.5);">
             <div class="row g-4">
                 <div class="col-lg-3">
-                    <a href="#">
-                        <h1 class="text-primary mb-0">Fruitables</h1>
-                        <p class="text-secondary mb-0">Fresh products</p>
+                    <a href="/">
+                        <h1 class="text-primary mb-0">ECommerceMVC</h1>
+                        <p class="text-secondary mb-0">Giày dép chính hãng</p>
                     </a>
                 </div>
+
                 <div class="col-lg-6">
                     <div class="position-relative mx-auto">
-                        <input class="form-control border-0 w-100 py-3 px-4 rounded-pill" type="number" placeholder="Your Email">
-                        <button type="submit" class="btn btn-primary border-0 border-secondary py-3 px-4 position-absolute rounded-pill text-white" style="top: 0; right: 0;">Subscribe Now</button>
+                        <h5 class="text-white mb-3">
+                            <i class="fas fa-envelope me-2"></i> Đăng ký nhận tin
+                        </h5>
+                        <p class="text-white-50 mb-3">
+                            Nhận thông tin sản phẩm mới, khuyến mãi & voucher độc quyền
+                        </p>
+
+                        <form id="newsletterForm" onsubmit="return subscribeNewsletter(event)">
+                            <div class="input-group">
+                                <input type="email"
+                                       id="newsletterEmail"
+                                       class="form-control border-0 w-100 py-3 px-4 rounded-pill"
+                                       placeholder="Nhập email của bạn..."
+                                       required />
+                                <button type="submit"
+                                        class="btn btn-primary border-0 border-secondary py-3 px-4 position-absolute rounded-pill text-white"
+                                        style="top: 0; right: 0;">
+                                    <i class="fas fa-paper-plane me-2"></i> Đăng ký
+                                </button>
+                            </div>
+                        </form>
+
+                        <div id="newsletterMessage" class="mt-2"></div>
                     </div>
                 </div>
+
                 <div class="col-lg-3">
                     <div class="d-flex justify-content-end pt-3">
-                        <a class="btn  btn-outline-secondary me-2 btn-md-square rounded-circle" href=""><i class="fab fa-twitter"></i></a>
-                        <a class="btn btn-outline-secondary me-2 btn-md-square rounded-circle" href=""><i class="fab fa-facebook-f"></i></a>
-                        <a class="btn btn-outline-secondary me-2 btn-md-square rounded-circle" href=""><i class="fab fa-youtube"></i></a>
-                        <a class="btn btn-outline-secondary btn-md-square rounded-circle" href=""><i class="fab fa-linkedin-in"></i></a>
+                        <a class="btn btn-outline-secondary me-2 btn-md-square rounded-circle" href="#"><i class="fab fa-twitter"></i></a>
+                        <a class="btn btn-outline-secondary me-2 btn-md-square rounded-circle" href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a class="btn btn-outline-secondary me-2 btn-md-square rounded-circle" href="#"><i class="fab fa-youtube"></i></a>
+                        <a class="btn btn-outline-secondary btn-md-square rounded-circle" href="#"><i class="fab fa-linkedin-in"></i></a>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- ===== END NEWSLETTER ===== -->
+        <!-- ===== FOOTER CONTENT ===== -->
         <div class="row g-5">
             <div class="col-lg-3 col-md-6">
                 <div class="footer-item">
-                    <h4 class="text-light mb-3">Why People Like us!</h4>
+                    <h4 class="text-light mb-3">Về chúng tôi</h4>
                     <p class="mb-4">
-                        typesetting, remaining essentially unchanged. It was
-                        popularised in the 1960s with the like Aldus PageMaker including of Lorem Ipsum.
+                        Cửa hàng giày dép chính hãng, chất lượng cao.
+                        Giao hàng toàn quốc, đổi trả trong 7 ngày.
                     </p>
-                    <a href="" class="btn border-secondary py-2 px-4 rounded-pill text-primary">Read More</a>
+                    <a href="#" class="btn border-secondary py-2 px-4 rounded-pill text-primary">
+                        Xem thêm
+                    </a>
                 </div>
             </div>
+
             <div class="col-lg-3 col-md-6">
                 <div class="d-flex flex-column text-start footer-item">
-                    <h4 class="text-light mb-3">Shop Info</h4>
-                    <a class="btn-link" href="">About Us</a>
-                    <a class="btn-link" href="">Contact Us</a>
-                    <a class="btn-link" href="">Privacy Policy</a>
-                    <a class="btn-link" href="">Terms & Condition</a>
-                    <a class="btn-link" href="">Return Policy</a>
-                    <a class="btn-link" href="">FAQs & Help</a>
+                    <h4 class="text-light mb-3">Thông tin</h4>
+                    <a class="btn-link" href="#">Về chúng tôi</a>
+                    <a class="btn-link" href="#">Liên hệ</a>
+                    <a class="btn-link" href="#">Chính sách bảo mật</a>
+                    <a class="btn-link" href="#">Điều khoản sử dụng</a>
+                    <a class="btn-link" href="#">FAQs</a>
                 </div>
             </div>
+
             <div class="col-lg-3 col-md-6">
                 <div class="d-flex flex-column text-start footer-item">
-                    <h4 class="text-light mb-3">Account</h4>
-                    <a class="btn-link" href="">My Account</a>
-                    <a class="btn-link" href="">Shop details</a>
-                    <a class="btn-link" href="">Shopping Cart</a>
-                    <a class="btn-link" href="">Wishlist</a>
-                    <a class="btn-link" href="">Order History</a>
-                    <a class="btn-link" href="">International Orders</a>
+                    <h4 class="text-light mb-3">Tài khoản</h4>
+                    <a class="btn-link" asp-controller="KhachHang" asp-action="Profile">Tài khoản của tôi</a>
+                    <a class="btn-link" asp-controller="HangHoa" asp-action="Index">Cửa hàng</a>
+                    <a class="btn-link" asp-controller="Cart" asp-action="Index">Giỏ hàng</a>
+                    <a class="btn-link" asp-controller="KhachHang" asp-action="OrderHistory">Lịch sử đơn hàng</a>
                 </div>
             </div>
+
             <div class="col-lg-3 col-md-6">
                 <div class="footer-item">
-                    <h4 class="text-light mb-3">Contact</h4>
-                    <p>Address: 1429 Netus Rd, NY 48247</p>
-                    <p>Email: Example@gmail.com</p>
-                    <p>Phone: +0123 4567 8910</p>
-                    <p>Payment Accepted</p>
-                    <img src="~/img/payment.png" class="img-fluid" alt="">
+                    <h4 class="text-light mb-3">Liên hệ</h4>
+                    <p><i class="fas fa-map-marker-alt me-2"></i> 123 Lê Lợi, Quận 1, TP.HCM</p>
+                    <p><i class="fas fa-envelope me-2"></i> support@ecommercemvc.com</p>
+                    <p><i class="fas fa-phone me-2"></i> 1900-xxxx</p>
+                    <p class="mt-3"><strong>Thanh toán</strong></p>
+                    <img src="~/img/payment.png" class="img-fluid" alt="Payment">
                 </div>
             </div>
         </div>
     </div>
 </div>
 <!-- Footer End -->
+<!-- ===== NEWSLETTER SCRIPT ===== -->
+<script>
+    async function subscribeNewsletter(event) {
+        event.preventDefault();
+
+        const email = document.getElementById('newsletterEmail').value;
+        const messageDiv = document.getElementById('newsletterMessage');
+        const submitBtn = event.target.querySelector('button');
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang xử lý...';
+
+        try {
+            const response = await fetch('/Newsletter/Subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `email=${encodeURIComponent(email)}`
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                messageDiv.className = 'alert alert-success';
+                messageDiv.innerHTML = result.message;
+                document.getElementById('newsletterEmail').value = '';
+            } else {
+                messageDiv.className = 'alert alert-danger';
+                messageDiv.innerHTML = result.message;
+            }
+
+            setTimeout(() => messageDiv.innerHTML = '', 5000);
+
+        } catch {
+            messageDiv.className = 'alert alert-danger';
+            messageDiv.innerHTML = 'Có lỗi xảy ra, vui lòng thử lại!';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Đăng ký';
+        }
+
+        return false;
+    }
+</script>

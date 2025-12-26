@@ -7,7 +7,7 @@
         public string Slug { get; set; }
         public string MoTa { get; set; }
         public string MoTaNgan { get; set; }
-        public double DonGia { get; set; }
+        public decimal DonGia { get; set; }
         public string Hinh { get; set; }
         public string TenLoai { get; set; }
         public int SoLuongTon { get; set; }
