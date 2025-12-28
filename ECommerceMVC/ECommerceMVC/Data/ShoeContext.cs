@@ -442,6 +442,29 @@ public partial class ShoeContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Favorites_Customers");
         });
+        modelBuilder.Entity<Voucher>(entity =>
+        {
+            entity.HasKey(e => e.MaVoucher);
+            entity.ToTable("Voucher");
+            entity.Property(e => e.Code).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.DiscountPercent).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.MaxDiscountAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.MinOrderAmount).HasColumnType("decimal(18,2)");
+        });
+
+        modelBuilder.Entity<VoucherUsage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("VoucherUsage");
+
+            entity.HasOne(v => v.MaVoucherNavigation)
+                .WithMany(v => v.VoucherUsages)
+                .HasForeignKey(v => v.MaVoucher);
+
+            entity.HasOne(v => v.MaKhNavigation)
+                .WithMany()
+                .HasForeignKey(v => v.MaKh);
+        });
 
         OnModelCreatingPartial(modelBuilder);
     }

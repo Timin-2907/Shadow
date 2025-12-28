@@ -6,19 +6,14 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =======================
-// Add services to container
-// =======================
+// ===== Services =====
 builder.Services.AddControllersWithViews();
 
-// ===== Database =====
+// Database
 builder.Services.AddDbContext<ShoeContext>(options =>
-{
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("Shoe"));
-});
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Shoe")));
 
-// ===== Session =====
+// Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -27,42 +22,37 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// ===== AutoMapper =====
+// AutoMapper
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
-// ===== Authentication =====
-builder.Services.AddAuthentication(
-    CookieAuthenticationDefaults.AuthenticationScheme)
-.AddCookie(options =>
-{
-    options.LoginPath = "/KhachHang/DangNhap";
-    options.AccessDeniedPath = "/AccessDenied";
-});
+// Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/KhachHang/DangNhap";
+        options.AccessDeniedPath = "/AccessDenied";
+    });
 
-// ===== PayPal =====
-builder.Services.AddSingleton(x => new PaypalClient(
-    builder.Configuration["PaypalOptions:AppId"],
-    builder.Configuration["PaypalOptions:AppSecret"],
-    builder.Configuration["PaypalOptions:Mode"]
-));
+// PayPal
+var paypalClientId = builder.Configuration["PaypalOptions:AppId"];
+var paypalSecret = builder.Configuration["PaypalOptions:AppSecret"];
+var paypalMode = builder.Configuration["PaypalOptions:Mode"] ?? "sandbox";
 
-// ===== VNPay =====
+builder.Services.AddSingleton(x =>
+    new PaypalClient(paypalClientId ?? "", paypalSecret ?? "", paypalMode)
+);
+
+// VNPay
 builder.Services.AddSingleton<IVnPayService, VnPayService>();
 
-// ===== SEO =====
+// SEO / Email / Newsletter
 builder.Services.AddScoped<ISEOService, SEOService>();
-
-// ===== Email =====
 builder.Services.AddScoped<IEmailService, EmailService>();
-
-// ===== Newsletter (THÊM MỚI) =====
 builder.Services.AddScoped<INewsletterService, NewsletterService>();
 
 var app = builder.Build();
 
-// =======================
-// Configure middleware
-// =======================
+// ===== Middleware =====
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -71,36 +61,27 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// =======================
-// Routes
-// =======================
-
-// Product detail (SEO)
+// ===== Routes =====
 app.MapControllerRoute(
     name: "product-detail",
     pattern: "san-pham/{slug}-{id:int}",
     defaults: new { controller = "HangHoa", action = "Detail" });
 
-// Category
 app.MapControllerRoute(
     name: "category",
     pattern: "danh-muc/{slug}-{id:int}",
     defaults: new { controller = "HangHoa", action = "Category" });
 
-// Admin order
 app.MapControllerRoute(
     name: "adminOrder",
     pattern: "Admin/Orders/{action=Index}/{id?}",
     defaults: new { controller = "AdminOrder" });
 
-// Default
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
