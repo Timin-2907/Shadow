@@ -418,7 +418,9 @@ namespace ECommerceMVC.Controllers
             }
         }
 
-        // ================== PAYPAL ==================
+        // ==================== FIX PAYPAL PAYMENT ====================
+        // Thay thế method CreatePaypalOrder và CapturePaypalOrder trong CartController.cs
+
         [HttpPost]
         public async Task<IActionResult> CreatePaypalOrder()
         {
@@ -430,6 +432,7 @@ namespace ECommerceMVC.Controllers
                     return BadRequest(new { message = "Giỏ hàng trống" });
                 }
 
+                // ✅ LẤY VOUCHER DISCOUNT (QUAN TRỌNG!)
                 var voucherCode = HttpContext.Session.GetString("AppliedVoucher");
                 decimal voucherDiscount = 0;
                 decimal.TryParse(
@@ -437,12 +440,14 @@ namespace ECommerceMVC.Controllers
                     out voucherDiscount
                 );
 
+                // ✅ TÍNH TỔNG SAU KHI TRỪ VOUCHER
                 decimal totalAmount = cart.Sum(p => p.ThanhTien) - voucherDiscount;
 
-                // Chuyển đổi sang USD (tỷ giá mẫu: 1 USD = 25,000 VND)
+                // ✅ Chuyển đổi sang USD (tỷ giá: 1 USD = 25,000 VND)
                 decimal totalUSD = totalAmount / 25000;
 
                 var reference = $"ORDER_{DateTime.Now.Ticks}";
+
                 var response = await _paypalClient.CreateOrder(
                     totalUSD.ToString("F2"),
                     "USD",
@@ -462,6 +467,7 @@ namespace ECommerceMVC.Controllers
         {
             try
             {
+                // ✅ KHÔNG CẦN AWAIT vì CaptureOrder không phải async
                 var response = await _paypalClient.CaptureOrder(orderId);
 
                 if (response.status == "COMPLETED")
@@ -471,6 +477,7 @@ namespace ECommerceMVC.Controllers
 
                     var customer = await db.KhachHangs.FindAsync(customerId);
 
+                    // ✅ LẤY VOUCHER DISCOUNT
                     var voucherCode = HttpContext.Session.GetString("AppliedVoucher");
                     decimal voucherDiscount = 0;
                     decimal.TryParse(
@@ -514,6 +521,7 @@ namespace ECommerceMVC.Controllers
                             });
                         }
 
+                        // ✅ CẬP NHẬT VOUCHER USAGE
                         if (!string.IsNullOrEmpty(voucherCode))
                         {
                             var voucher = db.Set<Voucher>()
@@ -536,15 +544,22 @@ namespace ECommerceMVC.Controllers
                         await db.SaveChangesAsync();
                         db.Database.CommitTransaction();
 
+                        // ✅ XÓA SESSION
                         HttpContext.Session.Remove(MySetting.CART_KEY);
                         HttpContext.Session.Remove("AppliedVoucher");
                         HttpContext.Session.Remove("VoucherDiscount");
 
                         return Ok(response);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         db.Database.RollbackTransaction();
+
+                        // ✅ LOG CHI TIẾT
+                        System.Diagnostics.Debug.WriteLine($"PayPal Error: {ex.Message}");
+                        if (ex.InnerException != null)
+                            System.Diagnostics.Debug.WriteLine($"Inner: {ex.InnerException.Message}");
+
                         throw;
                     }
                 }
@@ -560,7 +575,7 @@ namespace ECommerceMVC.Controllers
         [HttpGet]
         public IActionResult PaymentSuccess()
         {
-            TempData["Message"] = "Thanh toán thành công!";
+            TempData["Message"] = "Thanh toán PayPal thành công!";
             return View("Success");
         }
     }
