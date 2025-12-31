@@ -101,41 +101,56 @@
     </div>
 </div>
 <!-- Footer End -->
-<!-- ===== NEWSLETTER SCRIPT ===== -->
 <script>
     async function subscribeNewsletter(event) {
         event.preventDefault();
 
         const email = document.getElementById('newsletterEmail').value;
         const messageDiv = document.getElementById('newsletterMessage');
-        const submitBtn = event.target.querySelector('button');
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+
+        // Validate email
+        if (!email || !email.includes('@@')) {
+            messageDiv.className = 'alert alert-danger mt-2';
+            messageDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Email không hợp lệ!';
+            return false;
+        }
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang xử lý...';
 
         try {
+            console.log('Sending email:', email); // Debug log
+
             const response = await fetch('/Newsletter/Subscribe', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `email=${encodeURIComponent(email)}`
+                headers: { 
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: `email=${encodeURIComponent(email)}&source=footer`
             });
 
+            console.log('Response status:', response.status); // Debug log
+
             const result = await response.json();
+            console.log('Result:', result); // Debug log
 
             if (result.success) {
-                messageDiv.className = 'alert alert-success';
-                messageDiv.innerHTML = result.message;
+                messageDiv.className = 'alert alert-success mt-2';
+                messageDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${result.message}`;
                 document.getElementById('newsletterEmail').value = '';
             } else {
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.innerHTML = result.message;
+                messageDiv.className = 'alert alert-danger mt-2';
+                messageDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${result.message}`;
             }
 
             setTimeout(() => messageDiv.innerHTML = '', 5000);
 
-        } catch {
-            messageDiv.className = 'alert alert-danger';
-            messageDiv.innerHTML = 'Có lỗi xảy ra, vui lòng thử lại!';
+        } catch (error) {
+            console.error('Error:', error); // Debug log
+            messageDiv.className = 'alert alert-danger mt-2';
+            messageDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Có lỗi xảy ra, vui lòng thử lại!';
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Đăng ký';

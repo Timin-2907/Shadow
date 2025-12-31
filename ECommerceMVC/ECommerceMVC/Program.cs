@@ -9,6 +9,15 @@ var builder = WebApplication.CreateBuilder(args);
 // ===== Services =====
 builder.Services.AddControllersWithViews();
 
+// ✅ THÊM ANTIFORGERY
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "RequestVerificationToken";
+    options.Cookie.Name = "X-CSRF-TOKEN";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+});
+
 // Database
 builder.Services.AddDbContext<ShoeContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Shoe")));

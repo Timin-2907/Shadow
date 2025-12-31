@@ -1,9 +1,11 @@
-﻿@{
+﻿@using ECommerceMVC.Controllers
+@using ECommerceMVC.ViewModels
+@model SendProductEmailVM
+@{
     ViewData["Title"] = "Gửi Email Quảng Cáo Sản Phẩm";
     var products = ViewBag.Products as List<ECommerceMVC.Data.HangHoa>;
     var vouchers = ViewBag.Vouchers as List<ECommerceMVC.Data.Voucher>;
-    var subscribers = ViewBag.Subscribers as IEnumerable<dynamic>
-                    ?? Enumerable.Empty<dynamic>();
+    var subscribers = ViewBag.Subscribers as List<SubscriberViewModel> ?? new List<SubscriberViewModel>();
 }
 
 <!DOCTYPE html>
@@ -81,21 +83,23 @@
                 border-radius: 8px;
             }
 
-        .preview-section {
+        .subscriber-list {
+            max-height: 300px;
+            overflow-y: auto;
             background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
         }
 
-        .email-preview {
-            max-width: 600px;
-            margin: 20px auto;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .subscriber-item {
+            padding: 8px;
+            border-bottom: 1px solid #e9ecef;
         }
+
+            .subscriber-item:last-child {
+                border-bottom: none;
+            }
     </style>
 </head>
 <body>
@@ -122,12 +126,21 @@
             </div>
         }
 
+        @if (TempData["Warning"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible fade show">
+                <i class="fas fa-exclamation-triangle"></i> @TempData["Warning"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
         <div class="card">
             <div class="card-header">
                 <h3 class="mb-0"><i class="fas fa-envelope"></i> Gửi Email Quảng Cáo Sản Phẩm</h3>
             </div>
             <div class="card-body">
                 <form asp-action="SendProductPromotion" method="post" id="emailForm">
+                    @Html.AntiForgeryToken()
                     <div class="row">
                         <!-- Chọn sản phẩm -->
                         <div class="col-md-6">
@@ -139,7 +152,7 @@
                                     <option value="">-- Chọn sản phẩm --</option>
                                     @if (products != null)
                                     {
-                                        @foreach (var product in products)
+                                        foreach (var product in products)
                                         {
                                             <option value="@product.MaHh"
                                                     data-name="@product.TenHh"
@@ -188,7 +201,7 @@
                                     <option value="">-- Không sử dụng voucher --</option>
                                     @if (vouchers != null)
                                     {
-                                        @foreach (var voucher in vouchers)
+                                        foreach (var voucher in vouchers)
                                         {
                                             <option value="@voucher.Code">
                                                 @voucher.Code - Giảm @voucher.DiscountPercent% (HSD: @voucher.NgayKetThuc.ToString("dd/MM/yyyy"))
@@ -208,34 +221,85 @@
                         <div class="col-12">
                             <h5 class="mb-3"><i class="fas fa-users"></i> Người nhận</h5>
 
+                            <!-- Checkbox gửi cho tất cả -->
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" name="SendToAll" id="sendToAll" />
                                 <label class="form-check-label" for="sendToAll">
                                     <strong>Gửi cho tất cả khách hàng</strong>
                                 </label>
                             </div>
-                            <div id="subscriberSection">
-                                <label class="form-label">Chọn người nhận</label>
 
-                                <div class="border rounded p-3" style="max-height:300px; overflow-y:auto">
-                                    @foreach (var sub in subscribers)
-                                    {
-                                        <div class="form-check">
-                                            <input class="form-check-input subscriber-checkbox"
-                                                   type="checkbox"
-                                                   value="@sub.Email" />
-
-                                            <label class="form-check-label">
-                                                <strong>@sub.HoTen</strong> – @sub.Email
-                                            </label>
-                                        </div>
-                                    }
-                                </div>
+                            <!-- Checkbox chỉ gửi cho subscribers -->
+                            <div class="form-check mb-3" id="subscriberOnlyOption" style="display:none;">
+                                <input class="form-check-input" type="checkbox" name="SendToSubscribersOnly" id="sendToSubscribersOnly" />
+                                <label class="form-check-label" for="sendToSubscribersOnly">
+                                    Chỉ gửi cho người đã đăng ký nhận tin
+                                </label>
                             </div>
 
+                            <!-- Section chọn từng subscriber -->
+                            <div id="subscriberSection">
+                                <label class="form-label">Chọn người nhận từ danh sách đã đăng ký</label>
+
+                                @if (subscribers != null && subscribers.Any())
+                                {
+                                    <!-- Hidden field để chứa emails đã chọn -->
+                                    <input type="hidden" id="selectedEmailsHidden" name="EmailList" value="" />
+
+                                    <div class="subscriber-list mb-3">
+                                        <div class="mb-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllSubscribers()">
+                                                <i class="fas fa-check-square"></i> Chọn tất cả
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAllSubscribers()">
+                                                <i class="fas fa-square"></i> Bỏ chọn tất cả
+                                            </button>
+                                            <span class="ms-3 text-muted">
+                                                <i class="fas fa-users"></i>
+                                                Tổng: <strong>@subscribers.Count</strong> người |
+                                                Đã chọn: <strong id="selectedCount">0</strong>
+                                            </span>
+                                        </div>
+
+                                        <hr />
+
+                                        @foreach (var sub in subscribers)
+                                        {
+                                            <div class="form-check subscriber-item">
+                                                <input class="form-check-input subscriber-checkbox"
+                                                       type="checkbox"
+                                                       value="@sub.Email"
+                                                       id="sub_@sub.Id"
+                                                       data-email="@sub.Email" />
+                                                <label class="form-check-label" for="sub_@sub.Id">
+                                                    <i class="fas fa-user-circle text-primary"></i>
+                                                    <strong>@sub.HoTen</strong>
+                                                    @if (!string.IsNullOrEmpty(sub.MaKh))
+                                                    {
+                                                        <span class="badge bg-success">Khách hàng</span>
+                                                    }
+                                                    <br />
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-envelope"></i> @sub.Email
+                                                    </small>
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Chưa có người đăng ký nhận tin nào.
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Section nhập email thủ công -->
                             <div id="emailListSection">
                                 <label class="form-label">
-                                    Danh sách email <span class="text-danger">*</span>
+                                    <i class="fas fa-keyboard"></i> Hoặc nhập email thủ công
                                 </label>
                                 <textarea name="EmailList" id="emailList" class="form-control" rows="5"
                                           placeholder="Nhập email, phân cách bằng dấu phẩy, chấm phẩy hoặc xuống dòng&#10;Ví dụ:&#10;email1@example.com, email2@example.com&#10;email3@example.com"></textarea>
@@ -250,9 +314,6 @@
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="fas fa-paper-plane"></i> Gửi Email
                         </button>
-                        <button type="button" class="btn btn-outline-secondary btn-lg" onclick="showPreview()">
-                            <i class="fas fa-eye"></i> Xem trước
-                        </button>
                     </div>
                 </form>
             </div>
@@ -262,30 +323,100 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Preview sản phẩm khi chọn
-        $('#productSelect').change(function() {
-            const selected = $(this).find(':selected');
-            if (selected.val()) {
-                const name = selected.data('name');
-                const price = parseFloat(selected.data('price'));
-                const image = selected.data('image');
-                const desc = selected.data('desc');
+        $(document).ready(function () {
+            console.log('Document ready!');
 
-                $('#previewImage').attr('src', '/Hinh/HangHoa/' + image);
-                $('#previewName').text(name);
-                $('#previewDesc').text(desc);
-                $('#previewOriginalPrice').text(formatCurrency(price));
+            // Form submit validation
+            $('#emailForm').on('submit', function(e) {
+                alert('Form is being submitted!'); // TEST ALERT
 
+                console.log('=== Form Submit Debug ===');
+                console.log('ProductId:', $('#productSelect').val());
+                console.log('SendToAll:', $('#sendToAll').is(':checked'));
+                console.log('SendToSubscribersOnly:', $('#sendToSubscribersOnly').is(':checked'));
+                console.log('Selected Emails:', $('.subscriber-checkbox:checked').length);
+                console.log('Email List:', $('#emailList').val());
+
+                // Validation
+                if (!$('#productSelect').val()) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn sản phẩm!');
+                    return false;
+                }
+
+                // Check if any email target is selected
+                const hasSelectedEmails = $('.subscriber-checkbox:checked').length > 0;
+                const hasEmailList = $('#emailList').val().trim().length > 0;
+                const sendToAll = $('#sendToAll').is(':checked');
+
+                if (!sendToAll && !hasSelectedEmails && !hasEmailList) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn người nhận hoặc nhập email!');
+                    return false;
+                }
+            });
+
+            // Preview sản phẩm khi chọn
+            $('#productSelect').change(function() {
+                const selected = $(this).find(':selected');
+                if (selected.val()) {
+                    const name = selected.data('name');
+                    const price = parseFloat(selected.data('price'));
+                    const image = selected.data('image');
+                    const desc = selected.data('desc');
+
+                    $('#previewImage').attr('src', '/Hinh/HangHoa/' + image);
+                    $('#previewName').text(name);
+                    $('#previewDesc').text(desc);
+                    $('#previewOriginalPrice').text(formatCurrency(price));
+
+                    updateSalePrice();
+                    $('#productPreview').removeClass('d-none');
+                } else {
+                    $('#productPreview').addClass('d-none');
+                }
+            });
+
+            // Cập nhật giá sale khi thay đổi discount
+            $('#discountPercent').on('input', function() {
                 updateSalePrice();
-                $('#productPreview').removeClass('d-none');
-            } else {
-                $('#productPreview').addClass('d-none');
-            }
-        });
+            });
 
-        // Cập nhật giá sale khi thay đổi discount
-        $('#discountPercent').on('input', function() {
-            updateSalePrice();
+            // Toggle các option khi chọn "Gửi cho tất cả"
+            $('#sendToAll').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#subscriberOnlyOption').show();
+                    $('#subscriberSection').hide();
+                    $('#emailListSection').hide();
+                    $('#emailList').removeAttr('required');
+                    $('.subscriber-checkbox').prop('checked', false);
+                    updateSelectedCount();
+                } else {
+                    $('#subscriberOnlyOption').hide();
+                    $('#sendToSubscribersOnly').prop('checked', false);
+                    $('#subscriberSection').show();
+                    $('#emailListSection').show();
+                }
+            });
+
+            // Khi chọn "chỉ gửi cho subscribers"
+            $('#sendToSubscribersOnly').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#subscriberSection').hide();
+                    $('#emailListSection').hide();
+                } else {
+                    $('#subscriberSection').hide();
+                    $('#emailListSection').hide();
+                }
+            });
+
+            // Track khi user chọn / bỏ chọn subscriber
+            $('.subscriber-checkbox').change(function () {
+                updateSelectedCount();
+            });
+
+            // Initial count
+            updateSelectedCount();
         });
 
         function updateSalePrice() {
@@ -312,19 +443,19 @@
             }).format(value);
         }
 
-        // Toggle email list section
-        $('#sendToAll').change(function() {
-            if ($(this).is(':checked')) {
-                $('#emailListSection').hide();
-                $('#emailList').removeAttr('required');
-            } else {
-                $('#emailListSection').show();
-                $('#emailList').attr('required', 'required');
-            }
-        });
+        function selectAllSubscribers() {
+            $('.subscriber-checkbox').prop('checked', true);
+            updateSelectedCount();
+        }
 
-        function showPreview() {
-            alert('Chức năng xem trước email sẽ được triển khai sau!');
+        function deselectAllSubscribers() {
+            $('.subscriber-checkbox').prop('checked', false);
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const count = $('.subscriber-checkbox:checked').length;
+            $('#selectedCount').text(count);
         }
     </script>
 </body>
