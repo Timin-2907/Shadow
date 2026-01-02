@@ -23,11 +23,13 @@ namespace ECommerceMVC.Controllers
             _newsletterService = newsletterService;
         }
 
+        // GET: /AdminEmail/Index - Dashboard quản lý email
         public IActionResult Index()
         {
             return View();
         }
 
+        // GET: /AdminEmail/SendProductPromotion - Form gửi email quảng cáo sản phẩm
         public async Task<IActionResult> SendProductPromotion()
         {
             ViewBag.Products = await _context.HangHoas
@@ -57,8 +59,9 @@ namespace ECommerceMVC.Controllers
             return View();
         }
 
+        // POST: /AdminEmail/SendProductPromotion - Xử lý gửi email
         [HttpPost]
-        //  [ValidateAntiForgeryToken]//
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendProductPromotion(SendProductEmailVM model)
         {
             try
@@ -73,23 +76,6 @@ namespace ECommerceMVC.Controllers
                 Console.WriteLine($"SendToSubscribersOnly: {model.SendToSubscribersOnly}");
                 Console.WriteLine($"EmailList length: {model.EmailList?.Length ?? 0}");
                 Console.WriteLine($"EmailList content: {model.EmailList}");
-                Console.WriteLine($"ModelState.IsValid: {ModelState.IsValid}");
-
-                if (!ModelState.IsValid)
-                {
-                    Console.WriteLine("=== ModelState ERRORS ===");
-                    foreach (var state in ModelState)
-                    {
-                        if (state.Value.Errors.Count > 0)
-                        {
-                            Console.WriteLine($"Key: {state.Key}");
-                            foreach (var error in state.Value.Errors)
-                            {
-                                Console.WriteLine($"  Error: {error.ErrorMessage}");
-                            }
-                        }
-                    }
-                }
 
                 // Validate ProductId
                 if (model.ProductId <= 0)
@@ -99,6 +85,7 @@ namespace ECommerceMVC.Controllers
                     return RedirectToAction(nameof(SendProductPromotion));
                 }
 
+                // Lấy thông tin sản phẩm
                 var product = await _context.HangHoas
                     .FirstOrDefaultAsync(h => h.MaHh == model.ProductId);
 
@@ -109,18 +96,25 @@ namespace ECommerceMVC.Controllers
                     return RedirectToAction(nameof(SendProductPromotion));
                 }
 
-                Console.WriteLine($"Product found: {product.TenHh}");
+                Console.WriteLine($"✓ Product found: {product.TenHh}");
 
+                // Tạo URL đầy đủ cho email
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
                 var productUrl = $"{baseUrl}/san-pham/{GenerateSlug(product.TenHh)}-{product.MaHh}";
                 var imageUrl = $"{baseUrl}/Hinh/HangHoa/{product.Hinh}";
 
+                Console.WriteLine($"Base URL: {baseUrl}");
+                Console.WriteLine($"Product URL: {productUrl}");
+                Console.WriteLine($"Image URL: {imageUrl}");
+
+                // Tính giá sau khi giảm
                 decimal originalPrice = (decimal)(product.DonGia ?? 0);
                 decimal salePrice = originalPrice;
 
                 if (model.DiscountPercent > 0)
                     salePrice = originalPrice * (1 - model.DiscountPercent / 100);
 
+                // Tạo object promotion
                 var promotion = new EmailProductPromotion
                 {
                     ProductId = product.MaHh,
@@ -139,13 +133,17 @@ namespace ECommerceMVC.Controllers
 
                 if (model.SendToAll)
                 {
+                    Console.WriteLine("Mode: Send to ALL customers");
+
                     if (model.SendToSubscribersOnly)
                     {
+                        Console.WriteLine("  Filter: Subscribers only");
                         var subscribers = await _newsletterService.GetActiveSubscribers("SanPhamMoi");
                         emails = subscribers.Select(s => s.Email).Distinct().ToList();
                     }
                     else
                     {
+                        Console.WriteLine("  Filter: All active customers");
                         emails = await _context.KhachHangs
                             .Where(k => k.HieuLuc && !string.IsNullOrEmpty(k.Email))
                             .Select(k => k.Email)
@@ -155,7 +153,9 @@ namespace ECommerceMVC.Controllers
                 }
                 else
                 {
-                    // ✅ Chỉ lấy từ EmailList (đã được JS merge từ checkboxes + textarea)
+                    Console.WriteLine("Mode: Send to SELECTED customers");
+
+                    // Lấy từ EmailList (đã được merge từ checkboxes + textarea bởi JavaScript)
                     if (!string.IsNullOrWhiteSpace(model.EmailList))
                     {
                         emails = model.EmailList
@@ -170,12 +170,13 @@ namespace ECommerceMVC.Controllers
                 // Validate email list
                 if (!emails.Any())
                 {
-                    Console.WriteLine("ERROR: No emails to send");
+                    Console.WriteLine("ERROR: No valid emails to send");
                     TempData["Error"] = "Không có email hợp lệ để gửi. Vui lòng kiểm tra lại.";
                     return RedirectToAction(nameof(SendProductPromotion));
                 }
 
-                Console.WriteLine($"=== Sending emails to {emails.Count} recipients ===");
+                Console.WriteLine($"✓ Total emails to send: {emails.Count}");
+                Console.WriteLine("=== Starting email sending process ===");
 
                 // Gửi email
                 int success = 0;
@@ -185,56 +186,70 @@ namespace ECommerceMVC.Controllers
                 {
                     try
                     {
-                        Console.WriteLine($"Sending to: {email}");
+                        Console.WriteLine($"  [{success + failed + 1}/{emails.Count}] Sending to: {email}");
+
                         if (await _emailService.SendProductPromotionEmail(email, "Khách hàng", promotion))
                         {
                             success++;
-                            Console.WriteLine($"✓ Success: {email}");
+                            Console.WriteLine($"    ✓ Success");
                         }
                         else
                         {
                             failed++;
-                            Console.WriteLine($"✗ Failed: {email}");
+                            Console.WriteLine($"    ✗ Failed");
                         }
 
-                        await Task.Delay(300); // Tránh spam
+                        // Delay nhỏ để tránh bị Gmail block
+                        await Task.Delay(300);
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"✗ Exception sending to {email}: {ex.Message}");
+                        Console.WriteLine($"    ✗ Exception: {ex.Message}");
                         failed++;
                     }
                 }
 
-                Console.WriteLine($"=== Email sending completed: {success} success, {failed} failed ===");
+                Console.WriteLine("==============================================");
+                Console.WriteLine($"=== Email sending completed ===");
+                Console.WriteLine($"Success: {success}/{emails.Count}");
+                Console.WriteLine($"Failed: {failed}/{emails.Count}");
+                Console.WriteLine("==============================================");
 
+                // Thông báo kết quả
                 if (success > 0)
                 {
-                    TempData["Success"] = $"Đã gửi thành công {success}/{emails.Count} email!";
+                    TempData["Success"] = $"✅ Đã gửi thành công {success}/{emails.Count} email!";
                     if (failed > 0)
                     {
-                        TempData["Warning"] = $"Có {failed} email gửi thất bại.";
+                        TempData["Warning"] = $"⚠️ Có {failed} email gửi thất bại.";
                     }
                 }
                 else
                 {
-                    TempData["Error"] = "Không gửi được email nào. Vui lòng kiểm tra cấu hình email.";
+                    TempData["Error"] = "❌ Không gửi được email nào. Vui lòng kiểm tra cấu hình email trong appsettings.json";
                 }
 
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"=== EXCEPTION in SendProductPromotion ===");
+                Console.WriteLine("==============================================");
+                Console.WriteLine("=== EXCEPTION in SendProductPromotion ===");
                 Console.WriteLine($"Message: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
-                TempData["Error"] = $"Lỗi: {ex.Message}";
+                Console.WriteLine("==============================================");
+
+                TempData["Error"] = $"❌ Lỗi: {ex.Message}";
                 return RedirectToAction(nameof(SendProductPromotion));
             }
         }
 
+        // Helper: Tạo slug từ tên sản phẩm
         private string GenerateSlug(string text)
         {
+            if (string.IsNullOrEmpty(text))
+                return "";
+
             return System.Text.RegularExpressions.Regex
                 .Replace(text.ToLowerInvariant(), @"[^a-z0-9]+", "-")
                 .Trim('-');

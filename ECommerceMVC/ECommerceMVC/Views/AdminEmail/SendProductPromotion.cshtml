@@ -243,9 +243,6 @@
 
                                 @if (subscribers != null && subscribers.Any())
                                 {
-                                    <!-- Hidden field để chứa emails đã chọn -->
-                                    <input type="hidden" id="selectedEmailsHidden" name="EmailList" value="" />
-
                                     <div class="subscriber-list mb-3">
                                         <div class="mb-2">
                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllSubscribers()">
@@ -325,35 +322,64 @@
     <script>
         $(document).ready(function () {
             console.log('Document ready!');
+            console.log('Total subscribers loaded:', @subscribers.Count);
 
-            // Form submit validation
+            // ✅ MERGE CHECKBOXES VÀO TEXTAREA TRƯỚC KHI SUBMIT
             $('#emailForm').on('submit', function(e) {
-                alert('Form is being submitted!'); // TEST ALERT
-
                 console.log('=== Form Submit Debug ===');
-                console.log('ProductId:', $('#productSelect').val());
-                console.log('SendToAll:', $('#sendToAll').is(':checked'));
-                console.log('SendToSubscribersOnly:', $('#sendToSubscribersOnly').is(':checked'));
-                console.log('Selected Emails:', $('.subscriber-checkbox:checked').length);
-                console.log('Email List:', $('#emailList').val());
-
-                // Validation
+                
+                // Validation sản phẩm
                 if (!$('#productSelect').val()) {
                     e.preventDefault();
                     alert('Vui lòng chọn sản phẩm!');
                     return false;
                 }
 
-                // Check if any email target is selected
-                const hasSelectedEmails = $('.subscriber-checkbox:checked').length > 0;
-                const hasEmailList = $('#emailList').val().trim().length > 0;
-                const sendToAll = $('#sendToAll').is(':checked');
+                // ✅ LẤY EMAILS TỪ CHECKBOXES
+                const checkboxEmails = $('.subscriber-checkbox:checked').map(function() {
+                    return $(this).val();
+                }).get();
 
-                if (!sendToAll && !hasSelectedEmails && !hasEmailList) {
+                // ✅ LẤY EMAILS TỪ TEXTAREA
+                const textareaValue = $('#emailList').val().trim();
+                
+                // ✅ MERGE TẤT CẢ EMAILS
+                let allEmails = [...checkboxEmails];
+                
+                if (textareaValue) {
+                    const manualEmails = textareaValue
+                        .split(/[,;\n\r]+/)
+                        .map(e => e.trim())
+                        .filter(e => e && e.includes('@@'));
+                    allEmails = [...allEmails, ...manualEmails];
+                }
+
+                // ✅ REMOVE DUPLICATES
+                allEmails = [...new Set(allEmails)];
+
+                // ✅ CẬP NHẬT LẠI TEXTAREA VỚI TẤT CẢ EMAILS
+                $('#emailList').val(allEmails.join(', '));
+
+                console.log('ProductId:', $('#productSelect').val());
+                console.log('DiscountPercent:', $('#discountPercent').val());
+                console.log('VoucherCode:', $('select[name="VoucherCode"]').val());
+                console.log('SendToAll:', $('#sendToAll').is(':checked'));
+                console.log('SendToSubscribersOnly:', $('#sendToSubscribersOnly').is(':checked'));
+                console.log('Checkbox Emails:', checkboxEmails);
+                console.log('Manual Emails:', textareaValue);
+                console.log('Merged Emails:', allEmails);
+                console.log('Final EmailList value:', $('#emailList').val());
+
+                // ✅ VALIDATION CUỐI CÙNG
+                const sendToAll = $('#sendToAll').is(':checked');
+                if (!sendToAll && allEmails.length === 0) {
                     e.preventDefault();
                     alert('Vui lòng chọn người nhận hoặc nhập email!');
                     return false;
                 }
+
+                console.log('✓ Form validation passed, submitting...');
+                return true;
             });
 
             // Preview sản phẩm khi chọn
@@ -388,8 +414,8 @@
                     $('#subscriberOnlyOption').show();
                     $('#subscriberSection').hide();
                     $('#emailListSection').hide();
-                    $('#emailList').removeAttr('required');
                     $('.subscriber-checkbox').prop('checked', false);
+                    $('#emailList').val(''); // Clear textarea
                     updateSelectedCount();
                 } else {
                     $('#subscriberOnlyOption').hide();
