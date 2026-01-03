@@ -7,13 +7,41 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ECommerceMVC.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        /* Override màu xanh lá template Fruitables thành màu xanh biển */
+        .top-bar,
+        div[style*="background: linear-gradient(135deg, rgb(129, 211, 76)"],
+        .bg-primary,
+        .navbar-brand,
+        .text-primary {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%) !important;
+            color: white !important;
+        }
+
+        /* Đổi nút và link màu xanh biển */
+        .btn-primary {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%) !important;
+            border-color: #1565c0 !important;
+        }
+
+            .btn-primary:hover {
+                background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
+            }
+
+        /* Đổi màu các icon và text chính */
+        .text-primary,
+        a.text-primary:hover {
+            color: #1e88e5 !important;
+        }
+    </style>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ECommerceMVC</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index" style="color: #1e88e5 !important; font-weight: bold;">ECommerceMVC</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -26,11 +54,40 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
+
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user"></i> @User.Identity.Name
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="KhachHang" asp-action="Profile">
+                                            <i class="fas fa-user"></i> Tài khoản
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="KhachHang" asp-action="OrderHistory">
+                                            <i class="fas fa-shopping-bag"></i> Đơn hàng
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" asp-controller="KhachHang" asp-action="DangXuat">
+                                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -42,37 +99,10 @@
             &copy; 2023 - ECommerceMVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-<!-- Views/Shared/_Layout.cshtml -->
-@if (User.Identity.IsAuthenticated)
-{
-    <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-           data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-user"></i> @User.Identity.Name
-        </a>
-        <ul class="dropdown-menu" aria-labelledby="userDropdown">
-            <li>
-                <a class="dropdown-item" asp-controller="KhachHang" asp-action="Profile">
-                    <i class="fas fa-user"></i> Tài khoản
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item" asp-controller="KhachHang" asp-action="OrderHistory">
-                    <i class="fas fa-shopping-bag"></i> Đơn hàng
-                </a>
-            </li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-                <a class="dropdown-item text-danger" asp-controller="KhachHang" asp-action="DangXuat">
-                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
-                </a>
-            </li>
-        </ul>
-    </li>
-}
 </html>

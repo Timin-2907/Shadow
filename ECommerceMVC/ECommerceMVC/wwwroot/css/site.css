@@ -1,4 +1,4 @@
-html {
+﻿html {
   font-size: 14px;
 }
 
@@ -19,4 +19,244 @@ html {
 
 body {
   margin-bottom: 60px;
+}
+/* ========================================================
+   ĐỔI TOÀN BỘ MÀU XANH LÁ SANG XANH BIỂN - CODE HOÀN CHỈNH
+   ======================================================== */
+
+/* BƯỚC 1: Đổi tất cả biến CSS */
+:root {
+    --bs-primary: #1e88e5 !important;
+    --bs-primary-rgb: 30, 136, 229 !important;
+    --bs-secondary: #0288d1 !important;
+    --bs-secondary-rgb: 2, 136, 209 !important;
+    --bs-success: #1e88e5 !important;
+    --bs-success-rgb: 30, 136, 229 !important;
+    --bs-info: #1e88e5 !important;
+    --bs-info-rgb: 30, 136, 229 !important;
+}
+
+/* BƯỚC 2: Đổi tất cả màu text */
+.text-primary,
+.text-success,
+h1, h2, h3, h4, h5, h6,
+.navbar-brand,
+a.text-primary,
+.text-secondary {
+    color: #1e88e5 !important;
+}
+
+/* BƯỚC 3: Đổi màu background */
+.bg-primary,
+.bg-success,
+.bg-secondary {
+    background-color: #1e88e5 !important;
+}
+
+/* BƯỚC 4: Đổi màu thanh header (QUAN TRỌNG) */
+.topbar,
+.top-bar,
+[style*="background: linear-gradient(135deg, rgb(129, 211, 76)"],
+[style*="rgb(129, 211, 76)"],
+div[style*="background-color: rgb(129, 211, 76)"],
+div[style*="#81d34c"],
+div[style*="yellowgreen"] {
+    background: linear-gradient(135deg, #1e88e5 0%, #0277bd 100%) !important;
+    background-color: #1e88e5 !important;
+}
+
+/* BƯỚC 5: Đổi màu tất cả buttons */
+.btn-primary,
+.btn-success,
+.btn-secondary {
+    background-color: #1e88e5 !important;
+    border-color: #1565c0 !important;
+}
+
+    .btn-primary:hover,
+    .btn-success:hover,
+    .btn-secondary:hover {
+        background-color: #1565c0 !important;
+        border-color: #0d47a1 !important;
+    }
+
+/* BƯỚC 6: Đổi màu border */
+.border-primary,
+.border-success,
+.border-secondary {
+    border-color: #0288d1 !important;
+}
+
+/* BƯỚC 7: Đổi màu nút back-to-top */
+.back-to-top {
+    background: #1e88e5 !important;
+    color: white !important;
+}
+
+    .back-to-top:hover {
+        background: #1565c0 !important;
+    }
+
+/* BƯỚC 8: Đổi màu links */
+a:hover,
+.nav-link:hover,
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+    color: #1e88e5 !important;
+}
+
+/* BƯỚC 9: Đổi màu menu Contact */
+.navbar-nav .nav-link.active,
+.nav-link.text-primary,
+a[href*="contact"] {
+    color: #1e88e5 !important;
+}
+
+/* BƯỚC 10: Đổi màu icons */
+i.text-primary,
+i.text-success,
+.fa-primary {
+    color: #1e88e5 !important;
+}
+
+/* BƯỚC 11: Đổi màu decorative elements */
+.featurs .featurs-item .featurs-icon::after {
+    background: #0288d1 !important;
+}
+
+/* BƯỚC 12: Đổi màu tabs */
+.fruite .tab-class .nav-item a.active,
+.nav-tabs .nav-link.active {
+    background: #0288d1 !important;
+    border-bottom-color: #0288d1 !important;
+}
+
+    .fruite .tab-class .nav-item a.active span {
+        color: white !important;
+    }
+
+/* BƯỚC 13: Đổi màu hover effects */
+.fruite .fruite-categorie .fruite-name a:hover,
+.topbar .top-link a small:hover {
+    color: #0288d1 !important;
+}
+
+    .topbar .top-link a small:hover i {
+        color: #1e88e5 !important;
+    }
+
+/* BƯỚC 14: Đổi màu navigation controls */
+.vesitable .owl-nav .owl-prev,
+.vesitable .owl-nav .owl-next,
+.testimonial .owl-nav .owl-prev,
+.testimonial .owl-nav .owl-next {
+    color: #1e88e5 !important;
+    border-color: #0288d1 !important;
+}
+
+    .vesitable .owl-nav .owl-prev:hover,
+    .vesitable .owl-nav .owl-next:hover,
+    .testimonial .owl-nav .owl-prev:hover,
+    .testimonial .owl-nav .owl-next:hover {
+        background: #0288d1 !important;
+        color: white !important;
+    }
+
+/* BƯỚC 15: Đổi màu pagination */
+.pagination a {
+    border-color: #0288d1 !important;
+}
+
+    .pagination a.active {
+        background-color: #1e88e5 !important;
+        border-color: #1565c0 !important;
+    }
+
+    .pagination a:hover:not(.active) {
+        background-color: #1e88e5 !important;
+    }
+
+/* BƯỚC 16: Đổi màu carousel */
+.carousel-control-next,
+.carousel-control-prev {
+    background: #1e88e5 !important;
+}
+
+.carousel-item a {
+    background: linear-gradient(rgba(30, 136, 229, 0.7), rgba(30, 136, 229, 0.7)) !important;
+}
+
+/* BƯỚC 17: Đổi màu counter/facts */
+.counter h4 {
+    color: #1e88e5 !important;
+}
+
+/* BƯỚC 18: Đổi màu dropdown */
+.dropdown .dropdown-menu a:hover {
+    background: #0288d1 !important;
+    color: #1e88e5 !important;
+}
+
+/* BƯỚC 19: Đổi màu banner */
+.banner .banner-btn:hover {
+    background: #1e88e5 !important;
+}
+
+/* BƯỚC 20: Đổi màu footer */
+.footer .footer-item .btn-link:hover {
+    color: #0288d1 !important;
+}
+
+/* BƯỚC 21: Đổi màu search icon */
+.search-icon,
+.btn-search {
+    color: #1e88e5 !important;
+}
+
+/* BƯỚC 22: GHI ĐÈ INLINE STYLES (CỰC KỲ QUAN TRỌNG) */
+[style*="color: rgb(129, 211, 76)"] {
+    color: #1e88e5 !important;
+}
+
+[style*="color: yellowgreen"] {
+    color: #1e88e5 !important;
+}
+
+[style*="color: #81d34c"] {
+    color: #1e88e5 !important;
+}
+
+/* BƯỚC 23: Đổi màu tất cả gradient có xanh lá */
+[style*="linear-gradient"] {
+    background: linear-gradient(135deg, #1e88e5 0%, #0277bd 100%) !important;
+}
+
+/* BƯỚC 24: Đảm bảo logo "Fruitables" là xanh biển */
+.logo,
+.site-title,
+.brand-name {
+    color: #1e88e5 !important;
+}
+
+/* BƯỚC 25: Đổi màu form controls khi focus */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #1e88e5 !important;
+}
+
+/* BƯỚC 26: Đổi màu badge/notification */
+.badge-primary,
+.badge-success {
+    background-color: #1e88e5 !important;
+}
+
+/* BƯỚC 27: Đổi màu alert */
+.alert-primary,
+.alert-success {
+    background-color: rgba(30, 136, 229, 0.1) !important;
+    border-color: #1e88e5 !important;
+    color: #0d47a1 !important;
 }

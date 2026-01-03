@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ECommerceMVC.Data;
+using ECommerceMVC.Helpers;
 using ECommerceMVC.ViewModels;
 
 namespace ECommerceMVC.Controllers
 {
+    [AuthorizeRole("Admin")]  // ✅ CHỈ CHO PHÉP ADMIN TRUY CẬP
     public class AdminController : Controller
     {
         private readonly ShoeContext _context;

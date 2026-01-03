@@ -1,8 +1,175 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Trang Chủ - Bán Giày";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- Hero Section - Banner chính -->
+<div class="hero-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 80px 0; text-align: center; color: white;">
+    <div class="container">
+        <h1 style="font-size: 3.5rem; font-weight: bold; margin-bottom: 20px;">Bộ Sưu Tập Giày 2025</h1>
+        <p style="font-size: 1.3rem; margin-bottom: 30px;">Khám phá những mẫu giày thể thao và thời trang mới nhất</p>
+        <a href="@Url.Action("Products", "Admin")" class="btn btn-light btn-lg" style="padding: 15px 40px; font-size: 1.1rem;">Mua Ngay</a>
+    </div>
 </div>
+
+<!-- Featured Categories -->
+<div class="container" style="margin-top: 60px;">
+    <h2 style="text-align: center; margin-bottom: 40px; font-weight: bold;">Danh Mục Nổi Bật</h2>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card category-card" style="border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.3s;">
+                <img src="~/img/best-product-1.jpg" class="card-img-top" alt="Giày Sneaker" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-center">
+                    <h4>Giày Sneaker</h4>
+                    <p>Phong cách thể thao năng động</p>
+                    <a href="@Url.Action("Products", "Admin")" class="btn btn-primary">Xem Thêm</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card category-card" style="border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.3s;">
+                <img src="~/img/best-product-3.jpg" class="card-img-top" alt="Giày Chạy Bộ" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-center">
+                    <h4>Giày Chạy Bộ</h4>
+                    <p>Tối ưu cho vận động</p>
+                    <a href="@Url.Action("Products", "Admin")" class="btn btn-primary">Xem Thêm</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card category-card" style="border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.3s;">
+                <img src="~/img/best-product-3.jpg" class="card-img-top" alt="Giày Casual" style="height: 250px; object-fit: cover;">
+                <div class="card-body text-center">
+                    <h4>Giày Casual</h4>
+                    <p>Thoải mái hàng ngày</p>
+                    <a href="@Url.Action("Products", "Admin")" class="btn btn-primary">Xem Thêm</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Arrivals -->
+<div style="background-color: #f8f9fa; padding: 60px 0; margin-top: 60px;">
+    <div class="container">
+        <h2 style="text-align: center; margin-bottom: 40px; font-weight: bold;">Sản Phẩm Mới</h2>
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card product-card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="position: relative;">
+                        <img src="~/img/product1.jpg" class="card-img-top" alt="Sản phẩm 1" style="height: 200px; object-fit: cover;">
+                        <span class="badge bg-danger" style="position: absolute; top: 10px; right: 10px;">New</span>
+                    </div>
+                    <div class="card-body">
+                        <h5>Nike Air Max 2025</h5>
+                        <p class="text-muted">Giày thể thao nam</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 1.3rem; color: #667eea; font-weight: bold;">89$</span>
+                            <button class="btn btn-sm btn-primary">Thêm giỏ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card product-card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="position: relative;">
+                        <img src="~/img/product2.jpg" class="card-img-top" alt="Sản phẩm 2" style="height: 200px; object-fit: cover;">
+                        <span class="badge bg-danger" style="position: absolute; top: 10px; right: 10px;">New</span>
+                    </div>
+                    <div class="card-body">
+                        <h5>Adidas Ultra Boost</h5>
+                        <p class="text-muted">Giày chạy bộ</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 1.3rem; color: #667eea; font-weight: bold;">99$</span>
+                            <button class="btn btn-sm btn-primary">Thêm giỏ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card product-card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="position: relative;">
+                        <img src="~/img/product3.jpg" class="card-img-top" alt="Sản phẩm 3" style="height: 200px; object-fit: cover;">
+                        <span class="badge bg-success" style="position: absolute; top: 10px; right: 10px;">-20%</span>
+                    </div>
+                    <div class="card-body">
+                        <h5>Puma RS-X</h5>
+                        <p class="text-muted">Giày sneaker</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 1.3rem; color: #667eea; font-weight: bold;">120 $</span>
+                            <button class="btn btn-sm btn-primary">Thêm giỏ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card product-card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="position: relative;">
+                        <img src="~/img/product4.jpg" class="card-img-top" alt="Sản phẩm 4" style="height: 200px; object-fit: cover;">
+                    </div>
+                    <div class="card-body">
+                        <h5>Vans Old Skool</h5>
+                        <p class="text-muted">Giày casual</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 1.3rem; color: #667eea; font-weight: bold;">89$</span>
+                            <button class="btn btn-sm btn-primary">Thêm giỏ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container" style="margin: 80px auto;">
+    <div class="row text-center">
+        <div class="col-md-3">
+            <i class="fas fa-shipping-fast" style="font-size: 3rem; color: #667eea; margin-bottom: 15px;"></i>
+            <h4>Miễn Phí Vận Chuyển</h4>
+            <p class="text-muted">Cho đơn hàng trên 500.000₫</p>
+        </div>
+        <div class="col-md-3">
+            <i class="fas fa-undo" style="font-size: 3rem; color: #667eea; margin-bottom: 15px;"></i>
+            <h4>Đổi Trả 30 Ngày</h4>
+            <p class="text-muted">Hoàn tiền 100% nếu không hài lòng</p>
+        </div>
+        <div class="col-md-3">
+            <i class="fas fa-shield-alt" style="font-size: 3rem; color: #667eea; margin-bottom: 15px;"></i>
+            <h4>Bảo Hành Chính Hãng</h4>
+            <p class="text-muted">100% sản phẩm chính hãng</p>
+        </div>
+        <div class="col-md-3">
+            <i class="fas fa-headset" style="font-size: 3rem; color: #667eea; margin-bottom: 15px;"></i>
+            <h4>Hỗ Trợ 24/7</h4>
+            <p class="text-muted">Luôn sẵn sàng tư vấn</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .category-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+
+    .hero-section h1 {
+        animation: fadeInDown 1s;
+    }
+
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>

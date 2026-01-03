@@ -1,0 +1,102 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Staff Dashboard";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Xin chào, @ViewBag.HoTen</h2>
+            <p class="text-muted">Bảng điều khiển nhân viên</p>
+        </div>
+    </div>
+
+    <!-- Thống kê đơn hàng -->
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Đơn Chờ Xử Lý</h6>
+                            <h2 class="mb-0">@Model.PendingOrders</h2>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Đang Xử Lý</h6>
+                            <h2 class="mb-0">@Model.ProcessingOrders</h2>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-spinner fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Hoàn Thành</h6>
+                            <h2 class="mb-0">@Model.CompletedOrders</h2>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu chức năng -->
+    <div class="row mt-4">
+        <div class="col-md-6 mb-3">
+            <a asp-action="DonHang" asp-controller="Staff" class="text-decoration-none">
+                <div class="card h-100 hover-shadow">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-shopping-cart fa-3x text-primary mb-3"></i>
+                        <h4>Quản Lý Đơn Hàng</h4>
+                        <p class="text-muted">Xem và xử lý đơn hàng</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <a asp-action="TinNhan" asp-controller="Staff" class="text-decoration-none">
+                <div class="card h-100 hover-shadow">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-comments fa-3x text-success mb-3"></i>
+                        <h4>Tin Nhắn Khách Hàng</h4>
+                        <p class="text-muted">Xem và trả lời yêu cầu</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow {
+        transition: all 0.3s ease;
+    }
+
+        .hover-shadow:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+</style>

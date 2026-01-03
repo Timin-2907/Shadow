@@ -1,26 +1,28 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using ECommerceMVC.Data;
 using ECommerceMVC.Helpers;
-using ECommerceMVC.Services;              // ✅ THÊM
+using ECommerceMVC.Services;
 using ECommerceMVC.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ECommerceMVC.Models;
 using System.Security.Claims;
 
 namespace ECommerceMVC.Controllers
 {
     public class KhachHangController : Controller
     {
-        private readonly ShoeContext db;
+        // Sử dụng đầy đủ namespace để tránh xung đột với thư mục Models
+        private readonly ECommerceMVC.Data.ShoeContext db;
         private readonly IMapper _mapper;
-        private readonly INewsletterService _newsletterService; // ✅ THÊM
+        private readonly INewsletterService _newsletterService;
 
-        // ✅ CẬP NHẬT CONSTRUCTOR
         public KhachHangController(
-            ShoeContext context,
+            ECommerceMVC.Data.ShoeContext context,
             IMapper mapper,
             INewsletterService newsletterService
         )
@@ -41,19 +43,23 @@ namespace ECommerceMVC.Controllers
         public async Task<IActionResult> DangKy(
             RegisterVM model,
             IFormFile Hinh,
-            bool DangKyNhanTin = false   // ✅ checkbox newsletter
+            bool DangKyNhanTin = false
         )
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var khachHang = _mapper.Map<KhachHang>(model);
+                    // Chỉ định rõ lấy class KhachHang từ thư mục Data
+                    var khachHang = _mapper.Map<ECommerceMVC.Data.KhachHang>(model);
                     khachHang.RandomKey = MyUtil.GenerateRamdomKey();
                     khachHang.MatKhau = model.MatKhau.ToMd5Hash(khachHang.RandomKey);
                     khachHang.HieuLuc = true;
                     khachHang.VaiTro = 0;
-                    khachHang.DangKyNhanTin = DangKyNhanTin; // ✅ LƯU DB
+                    khachHang.DangKyNhanTin = DangKyNhanTin;
+
+                    // Thường trong DB tên là MaQuyen hoặc MaPhanQuyen
+                    khachHang.VaiTro = 2;
 
                     if (Hinh != null)
                     {
@@ -63,7 +69,6 @@ namespace ECommerceMVC.Controllers
                     db.Add(khachHang);
                     await db.SaveChangesAsync();
 
-                    // ✅ ĐĂNG KÝ NEWSLETTER
                     if (DangKyNhanTin)
                     {
                         await _newsletterService.Subscribe(
@@ -74,9 +79,6 @@ namespace ECommerceMVC.Controllers
                     }
 
                     TempData["Success"] = "Đăng ký thành công!";
-                    TempData["UserName"] = khachHang.MaKh;
-                    TempData["Email"] = khachHang.Email;
-
                     return RedirectToAction("DangKyThanhCong");
                 }
                 catch (Exception ex)
@@ -109,6 +111,7 @@ namespace ECommerceMVC.Controllers
 
             if (ModelState.IsValid)
             {
+                // Sử dụng MaQuyenNavigation để lấy thông tin quyền
                 var khachHang = db.KhachHangs
                     .SingleOrDefault(kh => kh.MaKh == model.UserName);
 
@@ -126,12 +129,17 @@ namespace ECommerceMVC.Controllers
                 }
                 else
                 {
+                    // Use the stored VaiTro value directly to determine role
+                    string roleName = khachHang.VaiTro == 1 ? "Admin"
+                                    : khachHang.VaiTro == 2 ? "Staff"
+                                    : "Customer";
+
                     var claims = new List<Claim>
                     {
-                        new Claim(ClaimTypes.Email, khachHang.Email),
-                        new Claim(ClaimTypes.Name, khachHang.HoTen),
-                        new Claim(MySetting.CLAIM_CUSTOMERID, khachHang.MaKh),
-                        new Claim(ClaimTypes.Role, "Customer")
+                        new Claim(System.Security.Claims.ClaimTypes.Email, khachHang.Email ?? string.Empty),
+                        new Claim(ClaimTypes.Name, khachHang.HoTen ?? string.Empty),
+                        new Claim(MySetting.CLAIM_CUSTOMERID, khachHang.MaKh ?? string.Empty),
+                        new Claim(ClaimTypes.Role, roleName)
                     };
 
                     var claimsIdentity = new ClaimsIdentity(
@@ -139,9 +147,16 @@ namespace ECommerceMVC.Controllers
                         CookieAuthenticationDefaults.AuthenticationScheme
                     );
 
-                    await HttpContext.SignInAsync(
-                        new ClaimsPrincipal(claimsIdentity)
-                    );
+                    await HttpContext.SignInAsync(new ClaimsPrincipal(claimsIdentity));
+
+                    HttpContext.Session.SetString("UserRole", roleName);
+                    HttpContext.Session.SetString("MaKh", khachHang.MaKh);
+                    HttpContext.Session.SetString("HoTen", khachHang.HoTen);
+
+                    if (roleName == "Admin")
+                        return RedirectToAction("Index", "Admin");
+                    if (roleName == "Staff")
+                        return RedirectToAction("Index", "Staff");
 
                     if (Url.IsLocalUrl(ReturnUrl))
                         return Redirect(ReturnUrl);
@@ -162,6 +177,7 @@ namespace ECommerceMVC.Controllers
         [Authorize]
         public async Task<IActionResult> DangXuat()
         {
+            HttpContext.Session.Clear();
             await HttpContext.SignOutAsync();
             return Redirect("/");
         }
@@ -176,7 +192,8 @@ namespace ECommerceMVC.Controllers
             if (string.IsNullOrEmpty(customerId))
                 return RedirectToAction("DangNhap");
 
-            var orders = db.HoaDons
+            // Chỉ định rõ ECommerceMVC.Data.HoaDon để tránh trùng tên
+            var orders = db.Set<ECommerceMVC.Data.HoaDon>()
                 .Include(h => h.MaTrangThaiNavigation)
                 .Include(h => h.ChiTietHds)
                 .Where(h => h.MaKh == customerId)
@@ -205,7 +222,7 @@ namespace ECommerceMVC.Controllers
             if (string.IsNullOrEmpty(customerId))
                 return RedirectToAction("DangNhap");
 
-            var order = db.HoaDons
+            var order = db.Set<ECommerceMVC.Data.HoaDon>()
                 .Include(h => h.ChiTietHds)
                     .ThenInclude(ct => ct.MaHhNavigation)
                 .Include(h => h.MaTrangThaiNavigation)

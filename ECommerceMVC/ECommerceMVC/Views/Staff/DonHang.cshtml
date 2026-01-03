@@ -1,0 +1,42 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+    var trangThaiList = ViewBag.TrangThaiList as IEnumerable<ECommerceMVC.Data.TrangThai> ?? Enumerable.Empty<ECommerceMVC.Data.TrangThai>();
+    var selected = ViewBag.TrangThaiSelected as int?;
+}
+
+<h2>Danh sách đơn hàng</h2>
+
+<form method="get" class="mb-3">
+    <label> Lọc theo trạng thái:
+        <select name="trangThai" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+            <option value="">--Tất cả--</option>
+            @foreach(var t in trangThaiList)
+            {
+                <option value="@t.MaTrangThai" selected="@(selected == t.MaTrangThai ? "selected" : null)">@t.TenTrangThai</option>
+            }
+        </select>
+    </label>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>#</th><th>Khách</th><th>Ngày</th><th>SL</th><th>Tổng</th><th>Trạng thái</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach(var o in Model)
+        {
+            <tr>
+                <td>@o.MaHd</td>
+                <td>@o.KhachHang (@o.MaKh)</td>
+                <td>@((DateTime)o.NgayDat).ToString("g")</td>
+                <td>@o.SoLuong</td>
+                <td>@((decimal)o.TongTien).ToString("N0")</td>
+                <td>@o.TrangThai</td>
+                <td>
+                    <a asp-action="ChiTiet" asp-route-id="@o.MaHd" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

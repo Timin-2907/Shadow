@@ -1,0 +1,122 @@
+﻿@model ECommerceMVC.Data.HoaDon
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+    var trangThaiList = ViewBag.TrangThaiList as IEnumerable<ECommerceMVC.Data.TrangThai> ?? Enumerable.Empty<ECommerceMVC.Data.TrangThai>();
+}
+
+<h2>Đơn hàng #@Model.MaHd</h2>
+
+<div class="mb-3">
+    <strong>Khách hàng:</strong> @Model.MaKhNavigation.HoTen (@Model.MaKh) <br />
+    <strong>Ngày đặt:</strong> @Model.NgayDat.ToString("g") <br />
+    <strong>Địa chỉ:</strong> @Model.DiaChi <br />
+    <strong>Thanh toán:</strong> @Model.CachThanhToan <br />
+    <strong>Phí vận chuyển:</strong> @Model.PhiVanChuyen.ToString("N0") <br />
+</div>
+
+<h4>Trạng thái</h4>
+<form asp-action="CapNhatTrangThai" method="post" class="mb-4">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.MaHd" />
+    <div class="row g-2 align-items-center">
+        <div class="col-auto">
+            <select name="trangThai" class="form-select">
+                @foreach (var t in trangThaiList)
+                {
+                    <option value="@t.MaTrangThai" selected="@(t.MaTrangThai == Model.MaTrangThai ? "selected" : null)">@t.TenTrangThai</option>
+                }
+            </select>
+        </div>
+        <div class="col">
+            <input name="ghiChu" class="form-control" placeholder="Ghi chú (thêm vào lịch sử ghi chú)" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+        </div>
+    </div>
+</form>
+
+<h4>Chi tiết sản phẩm</h4>
+<table class="table">
+    <thead><tr><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+    <tbody>
+        @foreach (var ct in Model.ChiTietHds)
+        {
+            <tr>
+                <td>@ct.MaHhNavigation.TenHh</td>
+                <td>@ct.SoLuong</td>
+                <td>@((decimal)ct.DonGia).ToString("N0")</td>
+                <td>@(ct.SoLuong * ct.DonGia).ToString("N0")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Ghi chú & lịch sử trao đổi</h4>
+<div id="notes" class="mb-3" style="white-space:pre-wrap; background:#f8f9fa; padding:12px; border-radius:6px;">
+    @Html.Raw(System.Net.WebUtility.HtmlEncode(Model.GhiChu ?? "").Replace("\n","<br/>"))
+</div>
+
+<h4>Trả lời khách / thêm phản hồi (ajax)</h4>
+@Html.AntiForgeryToken()
+<div class="mb-2">
+    <textarea id="replyContent" class="form-control" rows="3" placeholder="Nội dung trả lời"></textarea>
+</div>
+<button id="sendReply" class="btn btn-secondary">Gửi phản hồi</button>
+<span id="replyStatus" class="ms-2"></span>
+
+@section Scripts {
+<script>
+    (function(){
+        function getToken() {
+            var el = document.querySelector('input[name="__RequestVerificationToken"]');
+            return el ? el.value : '';
+        }
+
+        document.getElementById('sendReply').addEventListener('click', function () {
+            var content = document.getElementById('replyContent').value.trim();
+            if (!content) {
+                alert('Nhập nội dung trả lời.');
+                return;
+            }
+
+            var fd = new FormData();
+            fd.append('__RequestVerificationToken', getToken());
+            fd.append('id', '@Model.MaHd');
+            fd.append('noiDung', content);
+
+            var btn = this;
+            btn.disabled = true;
+            document.getElementById('replyStatus').textContent = 'Đang gửi...';
+
+            fetch('@Url.Action("TraLoiYeuCau","Staff")', {
+                method: 'POST',
+                body: fd
+            }).then(r => r.json())
+            .then(json => {
+                btn.disabled = false;
+                if (json.success) {
+                    // append reply to notes
+                    var notes = document.getElementById('notes');
+                    var timestamp = new Date().toLocaleString();
+                    var newLine = '[' + timestamp + '] ' + json.message.replace('Đã gửi phản hồi thành công!','') + '';
+                    // Show the reply content visually
+                    var replyBlock = document.createElement('div');
+                    replyBlock.innerHTML = '<strong>Bạn (nhân viên):</strong> ' + (content.replace(/\n/g,'<br/>'));
+                    replyBlock.style.marginTop = '8px';
+                    notes.appendChild(replyBlock);
+                    document.getElementById('replyContent').value = '';
+                    document.getElementById('replyStatus').textContent = 'Đã gửi';
+                    setTimeout(()=> document.getElementById('replyStatus').textContent = '', 3000);
+                } else {
+                    document.getElementById('replyStatus').textContent = 'Lỗi: ' + json.message;
+                }
+            }).catch(err => {
+                btn.disabled = false;
+                document.getElementById('replyStatus').textContent = 'Lỗi mạng';
+                console.error(err);
+            });
+        });
+    })();
+</script>
+}

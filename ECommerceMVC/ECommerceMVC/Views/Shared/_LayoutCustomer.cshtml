@@ -30,6 +30,164 @@
     <link href="~/css/bootstrap.min.css" rel="stylesheet">
     <link href="~/css/style.css" rel="stylesheet">
 
+    <!-- CSS Override - Đổi TẤT CẢ màu xanh lá thành xanh biển -->
+    <style>
+        /* Đổi thanh top bar thành màu xanh biển */
+        .topbar.bg-primary {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%) !important;
+        }
+
+        /* Đổi màu text-primary và các nút */
+        .text-primary,
+        h1.text-primary,
+        h2.text-primary,
+        h3.text-primary,
+        h4.text-primary,
+        h5.text-primary,
+        h6.text-primary,
+        a.text-primary,
+        span.text-primary,
+        p.text-primary {
+            color: #1e88e5 !important;
+        }
+
+        /* Đổi màu tất cả các nút primary */
+        .btn-primary,
+        .bg-primary,
+        button.btn-primary,
+        a.btn-primary,
+        input.btn-primary {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%) !important;
+            background-color: #1e88e5 !important;
+            border-color: #1565c0 !important;
+            color: white !important;
+        }
+
+            .btn-primary:hover,
+            .btn-primary:focus,
+            .btn-primary:active {
+                background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
+                background-color: #1565c0 !important;
+                border-color: #0d47a1 !important;
+            }
+
+        /* Đổi màu spinner */
+        .spinner-grow.text-primary {
+            color: #1e88e5 !important;
+        }
+
+        /* Đổi màu tất cả icon có màu xanh lá */
+        .fas.fa-search.text-primary,
+        .fa-shopping-bag,
+        .bi-cart,
+        i.text-primary {
+            color: #1e88e5 !important;
+        }
+
+        /* Đổi màu border-primary */
+        .border-primary {
+            border-color: #1565c0 !important;
+        }
+
+        /* Đổi màu back to top button */
+        .back-to-top {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%) !important;
+        }
+
+        /* Đổi màu badge giỏ hàng */
+        .badge,
+        .badge-primary,
+        span.badge {
+            background-color: #1e88e5 !important;
+            color: white !important;
+        }
+
+        /* Đổi màu highlight, active states */
+        .nav-link.active,
+        .active {
+            color: #1e88e5 !important;
+        }
+
+        /* Đổi màu hover effects */
+        a:hover,
+        .nav-link:hover {
+            color: #1565c0 !important;
+        }
+
+        /* Đổi màu các thành phần form focus */
+        .form-control:focus,
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #1e88e5 !important;
+            box-shadow: 0 0 0 0.2rem rgba(30, 136, 229, 0.25) !important;
+        }
+
+        /* Đổi màu pagination */
+        .page-link,
+        .pagination .active .page-link {
+            color: #1e88e5 !important;
+            background-color: rgba(30, 136, 229, 0.1) !important;
+            border-color: #1e88e5 !important;
+        }
+
+        /* Đổi màu progress bar */
+        .progress-bar {
+            background-color: #1e88e5 !important;
+        }
+
+        /* Đổi màu alert primary */
+        .alert-primary {
+            background-color: rgba(30, 136, 229, 0.1) !important;
+            border-color: #1e88e5 !important;
+            color: #0d47a1 !important;
+        }
+
+        /* Đổi màu card header */
+        .card-header.bg-primary {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%) !important;
+        }
+
+        /* Đổi màu dropdown active */
+        .dropdown-item.active,
+        .dropdown-item:active {
+            background-color: #1e88e5 !important;
+        }
+
+        /* Đổi màu list group */
+        .list-group-item.active {
+            background-color: #1e88e5 !important;
+            border-color: #1565c0 !important;
+        }
+
+        /* Đổi màu icon user */
+        .fa-user,
+        .fas.fa-user,
+        i.fa-user {
+            color: #1e88e5 !important;
+        }
+
+        /* Đổi tất cả icon fontawesome màu xanh */
+        .fa, .fas, .far, .fal, .fab {
+            color: inherit;
+        }
+
+        /* Override màu các icon cụ thể */
+        a .fa-user,
+        a .fas.fa-user,
+        .my-auto .fa-user {
+            color: #1e88e5 !important;
+        }
+
+        /* Đổi màu SVG và path nếu dùng SVG icon */
+        svg[fill*="#81d34c"],
+        path[fill*="#81d34c"],
+        svg[fill*="rgb(129, 211, 76)"],
+        path[fill*="rgb(129, 211, 76)"] {
+            fill: #1e88e5 !important;
+        }
+    </style>
+
     @RenderSection("Styles", required: false)
 </head>
 <body>
@@ -56,7 +214,7 @@
 
         <div class="container px-0">
             <nav class="navbar navbar-light bg-white navbar-expand-xl">
-                <a asp-action="Index" asp-controller="Home" class="navbar-brand"><h1 class="text-primary display-6">Fruitables</h1></a>
+                <a asp-action="Index" asp-controller="Home" class="navbar-brand"><h1 class="text-primary display-6">Shoe</h1></a>
                 <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
                     <span class="fa fa-bars text-primary"></span>
                 </button>
