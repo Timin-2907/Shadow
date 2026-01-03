@@ -1,7 +1,347 @@
 ﻿@{
-    ViewData["Title"] = "Admin Email";
+    ViewData["Title"] = "Quản Lý Email Marketing";
+    Layout = null;
 }
 
-<h2>Quản lý Email khuyến mãi</h2>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<p>Trang gửi email voucher / sản phẩm</p>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+            .header h1 {
+                font-size: 42px;
+                margin-bottom: 10px;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            }
+
+            .header p {
+                font-size: 18px;
+                opacity: 0.9;
+            }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+            .back-btn:hover {
+                background: rgba(255,255,255,0.3);
+                transform: translateX(-5px);
+            }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+            .card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+            .card-icon.purple {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+
+            .card-icon.pink {
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            }
+
+            .card-icon.blue {
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            }
+
+            .card-icon.green {
+                background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            }
+
+        .card h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 15px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+            .card-footer span {
+                font-weight: 600;
+                color: #667eea;
+            }
+
+            .card-footer i {
+                font-size: 20px;
+                color: #667eea;
+            }
+
+        .stats-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+            .stats-section h2 {
+                font-size: 28px;
+                margin-bottom: 25px;
+                color: #333;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+            .stat-box .number {
+                font-size: 36px;
+                font-weight: bold;
+                color: #667eea;
+                margin-bottom: 5px;
+            }
+
+            .stat-box .label {
+                color: #666;
+                font-size: 14px;
+            }
+
+        .feature-list {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+            .feature-item i {
+                font-size: 24px;
+                color: #667eea;
+            }
+
+            .feature-item span {
+                color: #555;
+                font-weight: 500;
+            }
+
+        @@media (max-width: 768px) {
+            .header h1
+
+        {
+            font-size: 32px;
+        }
+
+        .cards-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/Admin/Index" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Quay lại Dashboard
+        </a>
+
+        <div class="header">
+            <h1>📧 Quản Lý Email Marketing</h1>
+            <p>Gửi email quảng cáo sản phẩm và voucher cho khách hàng</p>
+        </div>
+
+        <div class="cards-grid">
+            <!-- Card 1: Gửi Email Sản Phẩm -->
+            <a href="/AdminEmail/SendProductPromotion" class="card">
+                <div class="card-icon purple">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h3>Gửi Email Sản Phẩm</h3>
+                <p>Quảng cáo sản phẩm mới với giá ưu đãi đặc biệt đến khách hàng của bạn</p>
+                <div class="card-footer">
+                    <span>Bắt đầu ngay</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- Card 2: Gửi Email Voucher -->
+            <a href="/AdminEmail/SendVoucher" class="card">
+                <div class="card-icon pink">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <h3>Gửi Email Voucher</h3>
+                <p>Tạo và gửi mã giảm giá đặc biệt cho khách hàng thân thiết</p>
+                <div class="card-footer">
+                    <span>Gửi voucher</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- Card 3: Quản Lý Subscribers -->
+            <a href="/AdminNewsletter/Subscribers" class="card">
+                <div class="card-icon blue">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Danh Sách Đăng Ký</h3>
+                <p>Xem và quản lý danh sách người đăng ký nhận thông tin</p>
+                <div class="card-footer">
+                    <span>Xem danh sách</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- Card 4: Lịch Sử Gửi -->
+            <a href="/AdminNewsletter/Campaigns" class="card">
+                <div class="card-icon green">
+                    <i class="fas fa-history"></i>
+                </div>
+                <h3>Lịch Sử Gửi Email</h3>
+                <p>Theo dõi các chiến dịch email đã gửi và hiệu quả</p>
+                <div class="card-footer">
+                    <span>Xem lịch sử</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </a>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <h2>
+                <i class="fas fa-chart-line"></i>
+                Tính năng nổi bật
+            </h2>
+
+            <div class="feature-list">
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Gửi email hàng loạt</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Template email đẹp mắt</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Tùy chỉnh nội dung</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Theo dõi hiệu quả</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Quản lý subscribers</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Gửi kèm voucher</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white; text-align: center;">
+                <i class="fas fa-lightbulb" style="font-size: 36px; margin-bottom: 15px;"></i>
+                <h3 style="margin-bottom: 10px;">Mẹo sử dụng hiệu quả</h3>
+                <p style="opacity: 0.9; line-height: 1.6;">
+                    Gửi email vào khung giờ 9-11h sáng hoặc 2-4h chiều để tăng tỷ lệ mở email.
+                    Sử dụng tiêu đề hấp dẫn và kèm theo ảnh sản phẩm chất lượng cao!
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

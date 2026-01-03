@@ -51,6 +51,9 @@ public partial class ShoeContext : DbContext
 
     public virtual DbSet<YeuThich> YeuThiches { get; set; }
     public virtual DbSet<Voucher> Vouchers { get; set; }
+    public virtual DbSet<NewsletterSubscriber> NewsletterSubscribers { get; set; }
+    public virtual DbSet<EmailCampaign> EmailCampaigns { get; set; }
+    public virtual DbSet<EmailCampaignLog> EmailCampaignLogs { get; set; }
 
 
     //    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -83,6 +86,55 @@ public partial class ShoeContext : DbContext
             entity.HasOne(d => d.MaKhNavigation).WithMany(p => p.BanBes)
                 .HasForeignKey(d => d.MaKh)
                 .HasConstraintName("FK_BanBe_KhachHang");
+        });
+        modelBuilder.Entity<NewsletterSubscriber>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("NewsletterSubscriber");
+
+            entity.Property(e => e.Email).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.HoTen).HasMaxLength(100);
+            entity.Property(e => e.MaKh).HasMaxLength(20).HasColumnName("MaKH");
+            entity.Property(e => e.UnsubscribeToken).HasMaxLength(100);
+            entity.Property(e => e.NgayDangKy).HasDefaultValueSql("GETDATE()");
+
+            // Index cho email (unique)
+            entity.HasIndex(e => e.Email).IsUnique();
+
+            // Foreign key
+            entity.HasOne(d => d.MaKhNavigation)
+                .WithMany()
+                .HasForeignKey(d => d.MaKh)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<EmailCampaign>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("EmailCampaign");
+
+            entity.Property(e => e.TenChienDich).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Subject).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.EmailContent).IsRequired();
+            entity.Property(e => e.LoaiChienDich).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.NguoiTao).HasMaxLength(50);
+            entity.Property(e => e.TrangThai).HasMaxLength(20).HasDefaultValue("Draft");
+            entity.Property(e => e.NgayTao).HasDefaultValueSql("GETDATE()");
+        });
+
+        modelBuilder.Entity<EmailCampaignLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("EmailCampaignLog");
+
+            entity.Property(e => e.Email).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.NgayGui).HasDefaultValueSql("GETDATE()");
+
+            entity.HasOne(d => d.Campaign)
+                .WithMany(p => p.EmailCampaignLogs)
+                .HasForeignKey(d => d.CampaignId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<ChiTietHd>(entity =>
@@ -441,6 +493,29 @@ public partial class ShoeContext : DbContext
                 .HasForeignKey(d => d.MaKh)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Favorites_Customers");
+        });
+        modelBuilder.Entity<Voucher>(entity =>
+        {
+            entity.HasKey(e => e.MaVoucher);
+            entity.ToTable("Voucher");
+            entity.Property(e => e.Code).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.DiscountPercent).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.MaxDiscountAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.MinOrderAmount).HasColumnType("decimal(18,2)");
+        });
+
+        modelBuilder.Entity<VoucherUsage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("VoucherUsage");
+
+            entity.Property(e => e.MaKh).HasColumnName("MaKH");
+            entity.Property(e => e.MaHd).HasColumnName("MaHD");
+            entity.Property(e => e.GiamGia).HasColumnType("decimal(18,2)");
+            entity.HasOne(e => e.Voucher)
+                  .WithMany(v => v.VoucherUsages)
+                  .HasForeignKey(e => e.MaVoucher)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

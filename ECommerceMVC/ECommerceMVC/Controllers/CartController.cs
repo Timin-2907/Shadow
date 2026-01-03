@@ -5,6 +5,7 @@ using ECommerceMVC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace ECommerceMVC.Controllers
 {
@@ -111,7 +112,6 @@ namespace ECommerceMVC.Controllers
                 discount = voucher.MaxDiscountAmount.Value;
             }
 
-            // Lưu vào Session
             HttpContext.Session.SetString("AppliedVoucher", voucher.Code);
             HttpContext.Session.SetString("VoucherDiscount", discount.ToString());
 
@@ -127,7 +127,6 @@ namespace ECommerceMVC.Controllers
             });
         }
 
-        // Thêm class này vào cuối CartController
         public class VoucherRequest
         {
             public string VoucherCode { get; set; }
@@ -145,10 +144,55 @@ namespace ECommerceMVC.Controllers
 
         [Authorize]
         [HttpPost]
-        public IActionResult Checkout(CheckoutVM model, string payment = "COD")
+        public async Task<IActionResult> Checkout(CheckoutVM model, string payment = "COD")
         {
-            if (!ModelState.IsValid) return View(Cart);
+            if (!Cart.Any())
+            {
+                TempData["Message"] = "Giỏ hàng trống!";
+                return Redirect("/");
+            }
 
+            var customerId = User.Claims
+                .Single(p => p.Type == MySetting.CLAIM_CUSTOMERID).Value;
+
+            // ===== LẤY THÔNG TIN GIAO HÀNG =====
+            string hoTen, diaChi, dienThoai, ghiChu;
+
+            if (model.GiongKhachHang)
+            {
+                // Lấy thông tin từ database
+                var customer = await db.KhachHangs.FindAsync(customerId);
+                if (customer == null)
+                {
+                    ModelState.AddModelError("", "Không tìm thấy thông tin khách hàng");
+                    ViewBag.PaypalClientId = _paypalClient.ClientId;
+                    return View(Cart);
+                }
+
+                hoTen = customer.HoTen;
+                diaChi = customer.DiaChi ?? "";
+                dienThoai = customer.DienThoai ?? "";
+                ghiChu = model.GhiChu ?? "";
+            }
+            else
+            {
+                // Validate thông tin từ form
+                if (string.IsNullOrWhiteSpace(model.HoTen) ||
+                    string.IsNullOrWhiteSpace(model.DiaChi) ||
+                    string.IsNullOrWhiteSpace(model.DienThoai))
+                {
+                    ModelState.AddModelError("", "Vui lòng điền đầy đủ thông tin giao hàng");
+                    ViewBag.PaypalClientId = _paypalClient.ClientId;
+                    return View(Cart);
+                }
+
+                hoTen = model.HoTen;
+                diaChi = model.DiaChi;
+                dienThoai = model.DienThoai;
+                ghiChu = model.GhiChu ?? "";
+            }
+
+            // ===== TÍNH TỔNG TIỀN =====
             var voucherCode = HttpContext.Session.GetString("AppliedVoucher");
             decimal voucherDiscount = 0;
             decimal.TryParse(
@@ -158,43 +202,51 @@ namespace ECommerceMVC.Controllers
 
             decimal totalAmount = Cart.Sum(p => p.ThanhTien) - voucherDiscount;
 
-            // VNPay
+            // ===== VNPAY =====
             if (payment == "Thanh toán VNPay")
             {
+                var deliveryInfo = new DeliveryInfoVM
+                {
+                    HoTen = hoTen,
+                    DiaChi = diaChi,
+                    DienThoai = dienThoai,
+                    GhiChu = ghiChu
+                };
+                HttpContext.Session.Set("DeliveryInfo", deliveryInfo);
+
                 var vnPayModel = new VnPaymentRequestModel
                 {
                     Amount = totalAmount,
                     CreatedDate = DateTime.Now,
-                    Description = model.HoTen,
-                    FullName = model.HoTen,
-                    OrderId = new Random().Next(1000, 99999)
+                    Description = $"Thanh toan don hang {hoTen}",
+                    FullName = hoTen,
+                    OrderId = new Random().Next(100000, 999999)
                 };
+
                 return Redirect(_vnPayService.CreatePaymentUrl(HttpContext, vnPayModel));
             }
 
-            // COD
-            var customerId = User.Claims
-                .Single(p => p.Type == MySetting.CLAIM_CUSTOMERID).Value;
-
+            // ===== COD =====
             var hoadon = new HoaDon
             {
                 MaKh = customerId,
-                HoTen = model.HoTen,
-                DiaChi = model.DiaChi,
-                DienThoai = model.DienThoai,
+                HoTen = hoTen,
+                DiaChi = diaChi,
+                DienThoai = dienThoai,
                 NgayDat = DateTime.Now,
                 CachThanhToan = "COD",
                 CachVanChuyen = "GRAB",
                 MaTrangThai = 0,
                 VoucherCode = voucherCode,
-                VoucherDiscount = voucherDiscount
+                VoucherDiscount = voucherDiscount,
+                GhiChu = ghiChu
             };
 
             db.Database.BeginTransaction();
             try
             {
                 db.Add(hoadon);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 foreach (var item in Cart)
                 {
@@ -227,20 +279,304 @@ namespace ECommerceMVC.Controllers
                     }
                 }
 
-                db.SaveChanges();
+                await db.SaveChangesAsync();
                 db.Database.CommitTransaction();
 
                 HttpContext.Session.Remove(MySetting.CART_KEY);
                 HttpContext.Session.Remove("AppliedVoucher");
                 HttpContext.Session.Remove("VoucherDiscount");
 
+                TempData["Message"] = "Đặt hàng thành công!";
                 return View("Success");
             }
-            catch
+            catch (Exception ex)
             {
                 db.Database.RollbackTransaction();
+
+                // ✅ LOG CHI TIẾT LỖI
+                var errorMsg = $"Error: {ex.Message}";
+                if (ex.InnerException != null)
+                    errorMsg += $"\nInner: {ex.InnerException.Message}";
+                if (ex.InnerException?.InnerException != null)
+                    errorMsg += $"\nInner2: {ex.InnerException.InnerException.Message}";
+
+                System.Diagnostics.Debug.WriteLine(errorMsg);
+                ModelState.AddModelError("", errorMsg);
+
+                ViewBag.PaypalClientId = _paypalClient.ClientId;
                 return View(Cart);
             }
+        }
+
+        // ================== VNPAY CALLBACK ==================
+        [HttpGet]
+        public async Task<IActionResult> PaymentCallBack()
+        {
+            var response = _vnPayService.PaymentExecute(Request.Query);
+
+            if (response == null || !response.Success)
+            {
+                TempData["Message"] = "Thanh toán VNPay thất bại!";
+                return View("PaymentFail");
+            }
+
+            var customerId = User.Claims
+                .Single(p => p.Type == MySetting.CLAIM_CUSTOMERID).Value;
+
+            var voucherCode = HttpContext.Session.GetString("AppliedVoucher");
+            decimal voucherDiscount = 0;
+            decimal.TryParse(
+                HttpContext.Session.GetString("VoucherDiscount"),
+                out voucherDiscount
+            );
+
+            var deliveryInfo = HttpContext.Session.Get<DeliveryInfoVM>("DeliveryInfo");
+            if (deliveryInfo == null)
+            {
+                TempData["Message"] = "Thông tin giao hàng không hợp lệ!";
+                return View("PaymentFail");
+            }
+
+            var hoadon = new HoaDon
+            {
+                MaKh = customerId,
+                HoTen = deliveryInfo.HoTen,
+                DiaChi = deliveryInfo.DiaChi,
+                DienThoai = deliveryInfo.DienThoai,
+                NgayDat = DateTime.Now,
+                CachThanhToan = "VNPAY",
+                CachVanChuyen = "GRAB",
+                MaTrangThai = 0,
+                VoucherCode = voucherCode,
+                VoucherDiscount = voucherDiscount,
+                VnpayTransactionId = response.TransactionId,
+                VnpayResponseCode = response.VnPayResponseCode,
+                GhiChu = deliveryInfo.GhiChu
+            };
+
+            db.Database.BeginTransaction();
+            try
+            {
+                db.Add(hoadon);
+                await db.SaveChangesAsync();
+
+                var cart = Cart;
+                foreach (var item in cart)
+                {
+                    db.Add(new ChiTietHd
+                    {
+                        MaHd = hoadon.MaHd,
+                        MaHh = item.MaHh,
+                        SoLuong = item.SoLuong,
+                        DonGia = item.DonGia,
+                        GiamGia = 0
+                    });
+                }
+
+                if (!string.IsNullOrEmpty(voucherCode))
+                {
+                    var voucher = db.Set<Voucher>()
+                        .FirstOrDefault(v => v.Code == voucherCode);
+
+                    if (voucher != null)
+                    {
+                        voucher.DaSuDung++;
+                        db.Add(new VoucherUsage
+                        {
+                            MaVoucher = voucher.MaVoucher,
+                            MaHd = hoadon.MaHd,
+                            MaKh = customerId,
+                            NgaySuDung = DateTime.Now,
+                            GiamGia = voucherDiscount
+                        });
+                    }
+                }
+
+                await db.SaveChangesAsync();
+                db.Database.CommitTransaction();
+
+                HttpContext.Session.Remove(MySetting.CART_KEY);
+                HttpContext.Session.Remove("AppliedVoucher");
+                HttpContext.Session.Remove("VoucherDiscount");
+                HttpContext.Session.Remove("DeliveryInfo");
+
+                TempData["Message"] = "Thanh toán VNPay thành công!";
+                return View("Success");
+            }
+            catch (Exception ex)
+            {
+                db.Database.RollbackTransaction();
+
+                // ✅ LOG CHI TIẾT LỖI
+                var errorMsg = $"Error: {ex.Message}";
+                if (ex.InnerException != null)
+                    errorMsg += $" | Inner: {ex.InnerException.Message}";
+
+                System.Diagnostics.Debug.WriteLine("VNPay Error: " + errorMsg);
+                TempData["Message"] = errorMsg;
+                return View("PaymentFail");
+            }
+        }
+
+        // ==================== FIX PAYPAL PAYMENT ====================
+        // Thay thế method CreatePaypalOrder và CapturePaypalOrder trong CartController.cs
+
+        [HttpPost]
+        public async Task<IActionResult> CreatePaypalOrder()
+        {
+            try
+            {
+                var cart = Cart;
+                if (!cart.Any())
+                {
+                    return BadRequest(new { message = "Giỏ hàng trống" });
+                }
+
+                // ✅ LẤY VOUCHER DISCOUNT (QUAN TRỌNG!)
+                var voucherCode = HttpContext.Session.GetString("AppliedVoucher");
+                decimal voucherDiscount = 0;
+                decimal.TryParse(
+                    HttpContext.Session.GetString("VoucherDiscount"),
+                    out voucherDiscount
+                );
+
+                // ✅ TÍNH TỔNG SAU KHI TRỪ VOUCHER
+                decimal totalAmount = cart.Sum(p => p.ThanhTien) - voucherDiscount;
+
+                // ✅ Chuyển đổi sang USD (tỷ giá: 1 USD = 25,000 VND)
+                decimal totalUSD = totalAmount / 25000;
+
+                var reference = $"ORDER_{DateTime.Now.Ticks}";
+
+                var response = await _paypalClient.CreateOrder(
+                    totalUSD.ToString("F2"),
+                    "USD",
+                    reference
+                );
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CapturePaypalOrder(string orderId)
+        {
+            try
+            {
+                // ✅ KHÔNG CẦN AWAIT vì CaptureOrder không phải async
+                var response = await _paypalClient.CaptureOrder(orderId);
+
+                if (response.status == "COMPLETED")
+                {
+                    var customerId = User.Claims
+                        .Single(p => p.Type == MySetting.CLAIM_CUSTOMERID).Value;
+
+                    var customer = await db.KhachHangs.FindAsync(customerId);
+
+                    // ✅ LẤY VOUCHER DISCOUNT
+                    var voucherCode = HttpContext.Session.GetString("AppliedVoucher");
+                    decimal voucherDiscount = 0;
+                    decimal.TryParse(
+                        HttpContext.Session.GetString("VoucherDiscount"),
+                        out voucherDiscount
+                    );
+
+                    var payer = response.payer;
+                    var shipping = response.purchase_units[0].shipping;
+
+                    var hoadon = new HoaDon
+                    {
+                        MaKh = customerId,
+                        HoTen = customer?.HoTen ?? $"{payer.name.given_name} {payer.name.surname}",
+                        DiaChi = customer?.DiaChi ?? $"{shipping.address.address_line_1}, {shipping.address.admin_area_2}",
+                        DienThoai = customer?.DienThoai ?? "N/A",
+                        NgayDat = DateTime.Now,
+                        CachThanhToan = "PayPal",
+                        CachVanChuyen = "GRAB",
+                        MaTrangThai = 0,
+                        VoucherCode = voucherCode,
+                        VoucherDiscount = voucherDiscount,
+                        GhiChu = $"PayPal Order: {orderId}"
+                    };
+
+                    db.Database.BeginTransaction();
+                    try
+                    {
+                        db.Add(hoadon);
+                        await db.SaveChangesAsync();
+
+                        foreach (var item in Cart)
+                        {
+                            db.Add(new ChiTietHd
+                            {
+                                MaHd = hoadon.MaHd,
+                                MaHh = item.MaHh,
+                                SoLuong = item.SoLuong,
+                                DonGia = item.DonGia,
+                                GiamGia = 0
+                            });
+                        }
+
+                        // ✅ CẬP NHẬT VOUCHER USAGE
+                        if (!string.IsNullOrEmpty(voucherCode))
+                        {
+                            var voucher = db.Set<Voucher>()
+                                .FirstOrDefault(v => v.Code == voucherCode);
+
+                            if (voucher != null)
+                            {
+                                voucher.DaSuDung++;
+                                db.Add(new VoucherUsage
+                                {
+                                    MaVoucher = voucher.MaVoucher,
+                                    MaHd = hoadon.MaHd,
+                                    MaKh = customerId,
+                                    NgaySuDung = DateTime.Now,
+                                    GiamGia = voucherDiscount
+                                });
+                            }
+                        }
+
+                        await db.SaveChangesAsync();
+                        db.Database.CommitTransaction();
+
+                        // ✅ XÓA SESSION
+                        HttpContext.Session.Remove(MySetting.CART_KEY);
+                        HttpContext.Session.Remove("AppliedVoucher");
+                        HttpContext.Session.Remove("VoucherDiscount");
+
+                        return Ok(response);
+                    }
+                    catch (Exception ex)
+                    {
+                        db.Database.RollbackTransaction();
+
+                        // ✅ LOG CHI TIẾT
+                        System.Diagnostics.Debug.WriteLine($"PayPal Error: {ex.Message}");
+                        if (ex.InnerException != null)
+                            System.Diagnostics.Debug.WriteLine($"Inner: {ex.InnerException.Message}");
+
+                        throw;
+                    }
+                }
+
+                return BadRequest(new { message = "Payment failed" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult PaymentSuccess()
+        {
+            TempData["Message"] = "Thanh toán PayPal thành công!";
+            return View("Success");
         }
     }
 }

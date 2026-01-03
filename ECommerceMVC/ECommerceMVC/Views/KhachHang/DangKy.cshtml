@@ -74,14 +74,15 @@
                         <input type="file" name="Hinh" class="form-control" />
                     </div>
 
-                    <!-- ===== NEWSLETTER SECTION (THÊM MỚI) ===== -->
+                    <!-- ===== NEWSLETTER SECTION (FIX ĐẦY ĐỦ) ===== -->
                     <div class="form-item mt-4">
                         <div class="card border-primary">
-                            <div class="card-body">
+                            <div class="card-body" style="background-color: #f8f9fa;">
                                 <h5 class="card-title text-primary">
                                     <i class="fas fa-envelope me-2"></i> Nhận thông tin khuyến mãi
                                 </h5>
 
+                                <!-- ✅ FIX 1: Checkbox chính với value="true" khi checked -->
                                 <div class="form-check">
                                     <input type="checkbox"
                                            class="form-check-input"
@@ -98,27 +99,42 @@
                                     Nhận email về sản phẩm mới, khuyến mãi và voucher đặc biệt.
                                 </small>
 
-                                <!-- Preferences -->
+                                <!-- ✅ FIX 2: Preferences với NAME attributes -->
                                 <div id="newsletterPreferences" class="mt-3 ps-4">
                                     <p class="mb-2"><small><strong>Tôi muốn nhận:</strong></small></p>
 
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" checked />
-                                        <label class="form-check-label">
+                                        <input type="checkbox"
+                                               class="form-check-input preference-checkbox"
+                                               id="NhanSanPhamMoi"
+                                               name="NhanSanPhamMoi"
+                                               value="true"
+                                               checked />
+                                        <label class="form-check-label" for="NhanSanPhamMoi">
                                             <small>Sản phẩm mới</small>
                                         </label>
                                     </div>
 
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" checked />
-                                        <label class="form-check-label">
+                                        <input type="checkbox"
+                                               class="form-check-input preference-checkbox"
+                                               id="NhanKhuyenMai"
+                                               name="NhanKhuyenMai"
+                                               value="true"
+                                               checked />
+                                        <label class="form-check-label" for="NhanKhuyenMai">
                                             <small>Chương trình khuyến mãi</small>
                                         </label>
                                     </div>
 
                                     <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" checked />
-                                        <label class="form-check-label">
+                                        <input type="checkbox"
+                                               class="form-check-input preference-checkbox"
+                                               id="NhanVoucher"
+                                               name="NhanVoucher"
+                                               value="true"
+                                               checked />
+                                        <label class="form-check-label" for="NhanVoucher">
                                             <small>Voucher & ưu đãi</small>
                                         </label>
                                     </div>
@@ -149,10 +165,34 @@
     </div>
 </div>
 
+<!-- ✅ FIX 3: JavaScript xử lý show/hide preferences -->
 <script>
-    document.getElementById('DangKyNhanTin').addEventListener('change', function () {
-        const prefs = document.getElementById('newsletterPreferences');
-        prefs.style.display = this.checked ? 'block' : 'none';
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainCheckbox = document.getElementById('DangKyNhanTin');
+        const preferencesDiv = document.getElementById('newsletterPreferences');
+        const preferenceCheckboxes = document.querySelectorAll('.preference-checkbox');
+
+        // Toggle preferences visibility
+        mainCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                preferencesDiv.style.display = 'block';
+            } else {
+                preferencesDiv.style.display = 'none';
+                // ✅ Uncheck all preferences when main checkbox is unchecked
+                preferenceCheckboxes.forEach(cb => cb.checked = false);
+            }
+        });
+
+        // ✅ Nếu user bỏ check tất cả preferences, tự động bỏ check main checkbox
+        preferenceCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const anyChecked = Array.from(preferenceCheckboxes).some(cb => cb.checked);
+                if (!anyChecked) {
+                    mainCheckbox.checked = false;
+                    preferencesDiv.style.display = 'none';
+                }
+            });
+        });
     });
 </script>
 
@@ -165,4 +205,18 @@
         border-left: 3px solid #0d6efd;
         padding-left: 15px;
     }
+
+    .preference-checkbox {
+        cursor: pointer;
+    }
+
+    .form-check-label {
+        cursor: pointer;
+    }
 </style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

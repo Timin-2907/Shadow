@@ -21,22 +21,31 @@ namespace ECommerceMVC.Data
         public string? MoTa { get; set; }
         public DateTime NgayTao { get; set; }
 
-        // Navigation
+        // ✅ GIỮ NAVIGATION CHO VOUCHER
         public virtual ICollection<VoucherUsage> VoucherUsages { get; set; } = new List<VoucherUsage>();
     }
 
+    [Table("VoucherUsage")]
     public class VoucherUsage
     {
+        [Key]
         public int Id { get; set; }
+
         public int MaVoucher { get; set; }
+
+        [Column("MaKH")]
         public string MaKh { get; set; } = null!;
+
+        [Column("MaHD")]
         public int MaHd { get; set; }
+
         public DateTime NgaySuDung { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
         public decimal GiamGia { get; set; }
 
-        // Navigation
-        public virtual Voucher MaVoucherNavigation { get; set; } = null!;
-        public virtual KhachHang MaKhNavigation { get; set; } = null!;
-        public virtual HoaDon MaHdNavigation { get; set; } = null!;
+        [ForeignKey(nameof(MaVoucher))]
+        public Voucher Voucher { get; set; } = null!;
     }
+    // ✅ KHÔNG CÓ NAVIGATION PROPERTIES
 }

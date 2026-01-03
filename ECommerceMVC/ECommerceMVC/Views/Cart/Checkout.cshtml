@@ -41,7 +41,6 @@
 						<textarea name="GhiChu" class="form-control" spellcheck="false" cols="30" rows="5" placeholder="Ghi chú"></textarea>
 					</div>
 
-					<!-- Hidden input để lưu voucher code -->
 					<input type="hidden" name="VoucherCode" id="appliedVoucherInput" value="">
 
 					<!-- NÚT THANH TOÁN -->
@@ -106,7 +105,6 @@
 						</div>
 						<div id="voucherMessage" class="mt-2" style="display: none;"></div>
 
-						<!-- Hiển thị voucher đã áp dụng -->
 						<div id="appliedVoucherSection" class="mt-3 d-none">
 							<div class="alert alert-success d-flex justify-content-between align-items-center">
 								<div>
@@ -151,30 +149,31 @@
 </div>
 <!-- Checkout Page End -->
 @section Scripts {
-	@if (!string.IsNullOrEmpty(ViewBag.PaypalClientdId))
+	<!-- ✅ FIX 1: LOAD PAYPAL SDK TRƯỚC - Kiểm tra ViewBag có data không -->
+	@if (!string.IsNullOrEmpty(ViewBag.PaypalClientId))
 	{
-		<script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.PaypalClientdId" data-sdk-integration-source="button-factory"></script>
+		<script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.PaypalClientId" data-sdk-integration-source="button-factory"></script>
 	}
+
 	<script>
 		// ============ BIẾN TOÀN CỤC ============
 		var appliedVoucherData = null;
 		var subtotalValue = @Model.Sum(p => p.ThanhTien);
-		var paypalClientId = '@ViewBag.PaypalClientdId';
+		var paypalClientId = '@ViewBag.PaypalClientId'; // ✅ FIX 2: Lưu vào biến JS
 
 		$(document).ready(function () {
 			console.log('✅ Page loaded!');
+			console.log('PayPal ClientId:', paypalClientId); // ✅ DEBUG
 
 			// Xử lý checkbox "Giống thông tin khách hàng"
 			$("#GiongKhachHang").change(function () {
 				if ($(this).prop("checked")) {
 					$(this).val(true);
 					$(".delivery-info").addClass("d-none");
-					// Clear required khi ẩn
 					$("#HoTen, #DiaChi, #DienThoai").prop('required', false);
 				} else {
 					$(this).val(false);
 					$(".delivery-info").removeClass("d-none");
-					// Restore required
 					$("#HoTen, #DiaChi, #DienThoai").prop('required', true);
 				}
 			});
@@ -194,6 +193,9 @@
 			$('#btnRemoveVoucher').on('click', function() {
 				removeVoucher();
 			});
+
+			// ✅ FIX 3: INIT PAYPAL SAU KHI DOM READY
+			initPayPalButtons();
 		});
 
 		// ============ HÀM XỬ LÝ VOUCHER ============
@@ -281,49 +283,97 @@
 			return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
 		}
 
-		// ============ PAYPAL - CODE CŨ ============
-		if (typeof paypal !== 'undefined' && paypalClientId) {
-			console.log('✅ PayPal SDK loaded');
+		// ✅ FIX 4: HÀM KHỞI TẠO PAYPAL
+		function initPayPalButtons() {
+			console.log('🔍 Checking PayPal...');
+			console.log('typeof paypal:', typeof paypal);
+			console.log('paypalClientId:', paypalClientId);
+
+			// ✅ KIỂM TRA PAYPAL SDK ĐÃ LOAD CHƯA
+			if (typeof paypal === 'undefined') {
+				console.error('❌ PayPal SDK not loaded!');
+				$('#paypal-button-container').html(
+					'<div class="alert alert-danger">PayPal SDK không tải được. Vui lòng kiểm tra kết nối internet.</div>'
+				);
+				return;
+			}
+
+			if (!paypalClientId || paypalClientId === '') {
+				console.error('❌ PayPal ClientId missing!');
+				$('#paypal-button-container').html(
+					'<div class="alert alert-warning">PayPal chưa được cấu hình trong hệ thống.</div>'
+				);
+				return;
+			}
+
+			console.log('✅ PayPal SDK loaded successfully!');
+
+			// ✅ RENDER PAYPAL BUTTONS
 			paypal.Buttons({
 				style: {
 					layout: 'vertical',
 					color: 'silver',
-					tagline: 'false'
+					tagline: false
 				},
 				createOrder: function(data, actions) {
-					return fetch("/Cart/create-paypal-order", {
-						method: "post",
-					}).then(function(response) {
+					console.log('📤 Creating PayPal order...');
+
+					return fetch("/Cart/CreatePaypalOrder", {
+						method: "POST",
+						headers: {
+							'Content-Type': 'application/json'
+						}
+					})
+					.then(function(response) {
+						console.log('Response status:', response.status);
+
 						if (!response.ok) {
 							return response.json().then(function(error) {
+								console.error('❌ Create order error:', error);
 								throw error;
 							});
 						}
+
 						return response.json();
-					}).then(function(order) {
+					})
+					.then(function(order) {
+						console.log('✅ Order created:', order);
 						return order.id;
-					}).catch(function(error) {
-						alert(error.message);
+					})
+					.catch(function(error) {
+						console.error('❌ CreateOrder failed:', error);
+						alert('Lỗi tạo đơn hàng: ' + (error.message || 'Unknown error'));
 					});
 				},
 				onApprove: function(data, actions) {
-					return fetch("/Cart/capture-paypal-order?orderId=" + data.orderID, {
-						method: "post",
-					}).then(function(response) {
+					console.log('✅ Payment approved! OrderID:', data.orderID);
+
+					return fetch("/Cart/CapturePaypalOrder?orderId=" + data.orderID, {
+						method: "POST"
+					})
+					.then(function(response) {
+						console.log('Capture response status:', response.status);
+
 						if (!response.ok) {
 							return response.json().then(function(error) {
+								console.error('❌ Capture error:', error);
 								throw error;
 							});
 						}
+
+						console.log('✅ Payment captured successfully!');
 						window.location.href = "/Cart/PaymentSuccess";
-					}).catch(function(error) {
-						alert(error.message);
+					})
+					.catch(function(error) {
+						console.error('❌ CaptureOrder failed:', error);
+						alert('Lỗi xử lý thanh toán: ' + (error.message || 'Unknown error'));
 					});
+				},
+				onError: function(err) {
+					console.error('❌ PayPal error:', err);
+					alert('Lỗi PayPal: ' + err);
 				}
 			}).render('#paypal-button-container');
-		} else {
-			console.warn('⚠️ PayPal SDK not loaded or ClientId missing');
-			$('#paypal-button-container').html('<div class="alert alert-warning">PayPal chưa được cấu hình</div>');
 		}
 	</script>
 
