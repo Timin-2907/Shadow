@@ -321,42 +321,54 @@
 
             // Get elements
             const quantityInput = document.getElementById('quantityInput');
-            const btnPlus = document.getElementById('btnPlus');
-            const btnMinus = document.getElementById('btnMinus');
+            let btnPlus = document.getElementById('btnPlus');
+            let btnMinus = document.getElementById('btnMinus');
             const addToCartForm = document.getElementById('addToCartForm');
             const btnAddToCart = document.getElementById('btnAddToCart');
 
-            // ✅ FIX: TĂNG SỐ LƯỢNG
+            // ✅ FIX: TĂNG SỐ LƯỢNG - Clone node để xóa tất cả event listeners cũ
             if (btnPlus) {
+                const newBtnPlus = btnPlus.cloneNode(true);
+                btnPlus.parentNode.replaceChild(newBtnPlus, btnPlus);
+                btnPlus = newBtnPlus; // Gán lại reference
+
                 btnPlus.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
+                    e.stopImmediatePropagation();
 
                     const currentVal = parseInt(quantityInput.value) || 1;
                     const maxVal = parseInt(quantityInput.max) || 99;
 
                     if (currentVal < maxVal) {
                         quantityInput.value = currentVal + 1;
+                        console.log('➕ Quantity increased to:', quantityInput.value);
+                    } else {
+                        console.log('⚠️ Max quantity reached:', maxVal);
                     }
-
-                    console.log('➕ Quantity:', quantityInput.value);
                 });
             }
 
-            // ✅ FIX: GIẢM SỐ LƯỢNG
+            // ✅ FIX: GIẢM SỐ LƯỢNG - Clone node để xóa tất cả event listeners cũ
             if (btnMinus) {
+                const newBtnMinus = btnMinus.cloneNode(true);
+                btnMinus.parentNode.replaceChild(newBtnMinus, btnMinus);
+                btnMinus = newBtnMinus; // Gán lại reference
+
                 btnMinus.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
+                    e.stopImmediatePropagation();
 
                     const currentVal = parseInt(quantityInput.value) || 1;
                     const minVal = parseInt(quantityInput.min) || 1;
 
                     if (currentVal > minVal) {
                         quantityInput.value = currentVal - 1;
+                        console.log('➖ Quantity decreased to:', quantityInput.value);
+                    } else {
+                        console.log('⚠️ Min quantity reached:', minVal);
                     }
-
-                    console.log('➖ Quantity:', quantityInput.value);
                 });
             }
 
@@ -367,8 +379,14 @@
                     const min = parseInt(this.min) || 1;
                     const max = parseInt(this.max) || 99;
 
-                    if (isNaN(value) || value < min) this.value = min;
-                    if (value > max) this.value = max;
+                    if (isNaN(value) || value < min) {
+                        this.value = min;
+                        console.log('⚠️ Value adjusted to min:', min);
+                    }
+                    if (value > max) {
+                        this.value = max;
+                        console.log('⚠️ Value adjusted to max:', max);
+                    }
                 });
 
                 // Chặn nhập ký tự không phải số
@@ -384,6 +402,7 @@
                 addToCartForm.addEventListener('submit', function(e) {
                     if (isSubmitting) {
                         e.preventDefault();
+                        console.log('⚠️ Form already submitting, prevented double submit');
                         return false;
                     }
 
@@ -395,7 +414,7 @@
                         btnAddToCart.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang thêm...';
                     }
 
-                    console.log('🛒 Adding to cart:', quantityInput.value);
+                    console.log('🛒 Adding to cart - Quantity:', quantityInput.value);
 
                     // Form sẽ submit bình thường
                     return true;

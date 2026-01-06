@@ -148,35 +148,84 @@
 		$(document).ready(function () {
 			console.log('✅ Cart page loaded');
 
-			// ============ XỬ LÝ TĂNG/GIẢM SỐ LƯỢNG ============
-			$('.btn-plus').on('click', function(e) {
-				e.preventDefault(); // ✅ Ngăn form submit
-				e.stopPropagation(); // ✅ Ngăn event bubble
+			// ============ PREVENT MULTIPLE CLICKS ============
+			let isUpdating = false;
+			let updateTimeout = null;
+
+			// ============ XÓA TẤT CẢ EVENT LISTENERS CŨ ============
+			$('.table .btn-plus').off('click');
+			$('.table .btn-minus').off('click');
+			$('.table .quantity-input').off('change keypress blur');
+
+			// ============ XỬ LÝ TĂNG SỐ LƯỢNG ============
+			$('.table .btn-plus').on('click', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+
+				if (isUpdating) {
+					console.log('⚠️ Update in progress, ignoring click');
+					return false;
+				}
 
 				var $input = $(this).closest('.quantity').find('.quantity-input');
 				var currentVal = parseInt($input.val()) || 1;
 				var maxVal = parseInt($input.attr('max')) || 99;
 
 				if (currentVal < maxVal) {
-					$input.val(currentVal + 1).trigger('change');
+					$input.val(currentVal + 1);
+					console.log('➕ Increased to:', currentVal + 1);
+
+					// Debounce: Đợi 500ms trước khi trigger change
+					clearTimeout(updateTimeout);
+					updateTimeout = setTimeout(function() {
+						$input.trigger('change');
+					}, 500);
+				} else {
+					console.log('⚠️ Max quantity reached');
 				}
+
+				return false;
 			});
 
-			$('.btn-minus').on('click', function(e) {
-				e.preventDefault(); // ✅ Ngăn form submit
-				e.stopPropagation(); // ✅ Ngăn event bubble
+			// ============ XỬ LÝ GIẢM SỐ LƯỢNG ============
+			$('.table .btn-minus').on('click', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+
+				if (isUpdating) {
+					console.log('⚠️ Update in progress, ignoring click');
+					return false;
+				}
 
 				var $input = $(this).closest('.quantity').find('.quantity-input');
 				var currentVal = parseInt($input.val()) || 1;
 				var minVal = parseInt($input.attr('min')) || 1;
 
 				if (currentVal > minVal) {
-					$input.val(currentVal - 1).trigger('change');
+					$input.val(currentVal - 1);
+					console.log('➖ Decreased to:', currentVal - 1);
+
+					// Debounce: Đợi 500ms trước khi trigger change
+					clearTimeout(updateTimeout);
+					updateTimeout = setTimeout(function() {
+						$input.trigger('change');
+					}, 500);
+				} else {
+					console.log('⚠️ Min quantity reached');
 				}
+
+				return false;
 			});
 
 			// ============ XỬ LÝ THAY ĐỔI SỐ LƯỢNG ============
-			$('.quantity-input').on('change', function() {
+			$('.table .quantity-input').on('change', function() {
+				if (isUpdating) {
+					console.log('⚠️ Already updating, skipping...');
+					return;
+				}
+
 				var $row = $(this).closest('tr');
 				var productId = $row.data('product-id');
 				var newQuantity = parseInt($(this).val()) || 1;
@@ -202,6 +251,9 @@
 				updateCartTotal();
 
 				// ✅ GỬI REQUEST CẬP NHẬT SERVER
+				isUpdating = true;
+				console.log('📤 Updating quantity on server:', newQuantity);
+
 				$.ajax({
 					url: '/Cart/UpdateQuantity',
 					type: 'POST',
@@ -212,11 +264,14 @@
 					success: function(response) {
 						console.log('✅ Quantity updated on server');
 						// Reload page để cập nhật session và xóa voucher
-						location.reload();
+						setTimeout(function() {
+							location.reload();
+						}, 500);
 					},
 					error: function(xhr, status, error) {
 						console.error('❌ Update failed:', error);
 						alert('Có lỗi xảy ra khi cập nhật số lượng!');
+						isUpdating = false;
 						location.reload();
 					}
 				});
@@ -242,7 +297,7 @@
 			}
 
 			// ============ XỬ LÝ NHẬP TRỰC TIẾP ============
-			$('.quantity-input').on('keypress', function(e) {
+			$('.table .quantity-input').on('keypress', function(e) {
 				// Chỉ cho phép số
 				if (e.which < 48 || e.which > 57) {
 					e.preventDefault();
@@ -250,7 +305,7 @@
 			});
 
 			// ============ VALIDATE KHI BLUR ============
-			$('.quantity-input').on('blur', function() {
+			$('.table .quantity-input').on('blur', function() {
 				var val = parseInt($(this).val());
 				var minVal = parseInt($(this).attr('min')) || 1;
 				var maxVal = parseInt($(this).attr('max')) || 99;
