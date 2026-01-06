@@ -112,10 +112,18 @@ namespace ECommerceMVC.Controllers
                 return RedirectToAction("Detail", new { id = id, slug = correctSlug });
             }
 
-            // Tạo URL đầy đủ cho Open Graph
+            // ===== TẠO URL TUYỆT ĐỐI CHO OPEN GRAPH =====
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var productUrl = $"{baseUrl}/san-pham/{correctSlug}-{id}";
+
+            // ===== URL HÌNH ẢNH TUYỆT ĐỐI (QUAN TRỌNG CHO FACEBOOK) =====
             var imageUrl = $"{baseUrl}/Hinh/HangHoa/{data.Hinh}";
+
+            // ===== TẠO MÔ TẢ NGẮN TỐI ƯU CHO FACEBOOK (160 KÝ TỰ) =====
+            var metaDescription = _seoService.GenerateMetaDescription(data.MoTa, 160);
+
+            // ===== TẠO MÔ TẢ DÀI HỞN CHO TWITTER/SHARING (200 KÝ TỰ) =====
+            var longDescription = _seoService.GenerateMetaDescription(data.MoTa, 200);
 
             var result = new ProductSEOViewModel
             {
@@ -123,43 +131,45 @@ namespace ECommerceMVC.Controllers
                 TenHH = data.TenHh,
                 Slug = correctSlug,
                 MoTa = data.MoTa ?? string.Empty,
-                MoTaNgan = _seoService.GenerateMetaDescription(data.MoTa, 160),
+                MoTaNgan = metaDescription,
                 DonGia = data.DonGia ?? 0,
                 Hinh = data.Hinh ?? string.Empty,
                 TenLoai = data.MaLoaiNavigation.TenLoai,
-                SoLuongTon = 10,  // ✅ Hardcode hoặc tính từ database sau
+                SoLuongTon = 10,  // TODO: Lấy từ database thực tế
 
-                // SEO Meta Tags
-                MetaTitle = $"{data.TenHh} - Giá {data.DonGia:N0}₫",
-                MetaDescription = _seoService.GenerateMetaDescription(data.MoTa, 160),
+                // ===== SEO META TAGS =====
+                MetaTitle = $"{data.TenHh} - Giá {data.DonGia:N0}₫ | Shoe Shop",
+                MetaDescription = metaDescription,
                 MetaKeywords = _seoService.GenerateMetaKeywords(
                     data.TenHh,
                     data.MaLoaiNavigation?.TenLoai,
-                    "giày", "mua giày online", "giày chính hãng"
+                    "giày", "giày thể thao", "mua giày online", "giày chính hãng"
                 ),
                 CanonicalUrl = productUrl,
 
-                // Open Graph (Facebook)
+                // ===== OPEN GRAPH (FACEBOOK) =====
                 OgTitle = data.TenHh,
-                OgDescription = _seoService.GenerateMetaDescription(data.MoTa, 200),
+                OgDescription = longDescription,
                 OgImage = imageUrl,
                 OgUrl = productUrl,
                 OgType = "product",
 
-                // Twitter Card
+                // ===== TWITTER CARD =====
                 TwitterCard = "summary_large_image",
                 TwitterTitle = data.TenHh,
-                TwitterDescription = _seoService.GenerateMetaDescription(data.MoTa, 200),
+                TwitterDescription = longDescription,
                 TwitterImage = imageUrl,
 
-                // Product Schema.org (JSON-LD)
+                // ===== PRODUCT SCHEMA.ORG (JSON-LD) =====
                 ProductSchema = GenerateProductSchema(data, productUrl, imageUrl)
             };
 
             return View(result);
         }
 
-        // Tạo structured data cho Google
+        /// <summary>
+        /// Tạo structured data (JSON-LD) cho Google Rich Snippets
+        /// </summary>
         private string GenerateProductSchema(HangHoa product, string url, string imageUrl)
         {
             var schema = new
@@ -167,13 +177,14 @@ namespace ECommerceMVC.Controllers
                 context = "https://schema.org/",
                 type = "Product",
                 name = product.TenHh,
-                image = imageUrl,
+                image = new[] { imageUrl },  // Array of images
                 description = _seoService.GenerateMetaDescription(product.MoTa, 200),
                 sku = product.MaHh.ToString(),
+                mpn = product.MaHh.ToString(),  // Manufacturer Part Number
                 brand = new
                 {
                     type = "Brand",
-                    name = "ECommerceMVC"
+                    name = "Shoe Shop"
                 },
                 offers = new
                 {
@@ -181,8 +192,21 @@ namespace ECommerceMVC.Controllers
                     url = url,
                     priceCurrency = "VND",
                     price = product.DonGia,
-                    availability = "https://schema.org/InStock",  // ✅ Mặc định còn hàng
-                    priceValidUntil = DateTime.Now.AddMonths(1).ToString("yyyy-MM-dd")
+                    availability = "https://schema.org/InStock",
+                    priceValidUntil = DateTime.Now.AddMonths(1).ToString("yyyy-MM-dd"),
+                    itemCondition = "https://schema.org/NewCondition",
+                    seller = new
+                    {
+                        type = "Organization",
+                        name = "Shoe Shop"
+                    }
+                },
+                // Thêm rating giả định (có thể lấy từ database sau)
+                aggregateRating = new
+                {
+                    type = "AggregateRating",
+                    ratingValue = "4.5",
+                    reviewCount = "24"
                 }
             };
 
@@ -193,7 +217,9 @@ namespace ECommerceMVC.Controllers
             });
         }
 
-        // Danh sách sản phẩm theo loại với SEO-friendly URL
+        /// <summary>
+        /// Danh sách sản phẩm theo loại với SEO-friendly URL
+        /// </summary>
         [Route("danh-muc/{slug}-{id:int}")]
         public IActionResult Category(int id, string slug, int page = 1, int pageSize = 12)
         {
@@ -209,6 +235,9 @@ namespace ECommerceMVC.Controllers
             {
                 return RedirectToAction("Category", new { id = id, slug = correctSlug, page = page });
             }
+
+            var totalProducts = db.HangHoas.Count(h => h.MaLoai == id);
+            var totalPages = (int)Math.Ceiling(totalProducts / (double)pageSize);
 
             var products = db.HangHoas
                 .Where(h => h.MaLoai == id)
@@ -228,12 +257,17 @@ namespace ECommerceMVC.Controllers
             ViewBag.CategoryName = loai.TenLoai;
             ViewBag.CategorySlug = correctSlug;
             ViewBag.CategoryId = id;
-            ViewBag.MetaTitle = $"{loai.TenLoai} - Trang {page}";
-            ViewBag.MetaDescription = $"Mua {loai.TenLoai} chính hãng, giá tốt nhất. Miễn phí vận chuyển toàn quốc.";
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.MetaTitle = $"{loai.TenLoai} - Trang {page} | Shoe Shop";
+            ViewBag.MetaDescription = $"Mua {loai.TenLoai} chính hãng, giá tốt nhất. Miễn phí vận chuyển toàn quốc. Trang {page}/{totalPages}";
 
             return View(products);
         }
-        // Route cũ - redirect sang route mới với slug
+
+        /// <summary>
+        /// Route cũ - redirect sang route mới với slug (để không bị broken link)
+        /// </summary>
         [HttpGet]
         [Route("HangHoa/Detail/{id:int}")]
         public IActionResult DetailOld(int id)
@@ -245,7 +279,7 @@ namespace ECommerceMVC.Controllers
             }
 
             var slug = _seoService.GenerateSlug(product.TenHh);
-            return RedirectToAction("Detail", new { id = id, slug = slug });
+            return RedirectToActionPermanent("Detail", new { id = id, slug = slug });
         }
     }
 }

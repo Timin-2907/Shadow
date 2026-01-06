@@ -16,13 +16,19 @@
     <meta property="og:title" content="@Model.OgTitle">
     <meta property="og:description" content="@Model.OgDescription">
     <meta property="og:image" content="@Model.OgImage">
+    <meta property="og:image:secure_url" content="@Model.OgImage">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:url" content="@Model.OgUrl">
-    <meta property="og:site_name" content="ECommerceMVC">
+    <meta property="og:site_name" content="Shoe Shop">
     <meta property="og:locale" content="vi_VN">
 
-    <!-- Facebook Specific -->
+    <!-- Facebook Specific Product Info -->
     <meta property="product:price:amount" content="@Model.DonGia">
     <meta property="product:price:currency" content="VND">
+    <meta property="product:availability" content="in stock">
+    <meta property="product:condition" content="new">
+    <meta property="product:retailer_item_id" content="@Model.MaHH">
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="@Model.TwitterCard">
@@ -55,7 +61,7 @@
                     "@@type": "ListItem",
                     "position": 2,
                     "name": "@Model.TenLoai",
-                  "item": "@(Context.Request.Scheme)://@(Context.Request.Host)"
+                    "item": "@(Context.Request.Scheme)://@(Context.Request.Host)/HangHoa?loai=@Model.MaHH"
                 },
                 {
                     "@@type": "ListItem",
@@ -70,9 +76,9 @@
 
 <!-- Single Page Header start -->
 <div class="container-fluid page-header py-5">
-    <h1 class="text-center text-white display-6">Shop Detail</h1>
+    <h1 class="text-center text-white display-6">Chi tiết sản phẩm</h1>
     <ol class="breadcrumb justify-content-center mb-0">
-        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
         <li class="breadcrumb-item"><a href="/HangHoa">Hàng hóa</a></li>
         <li class="breadcrumb-item active text-white">@Model.TenHH</li>
     </ol>
@@ -84,20 +90,26 @@
         <div class="row g-4 mb-5">
             <div class="col-lg-8 col-xl-9">
                 <div class="row g-4">
+                    <!-- Product Image -->
                     <div class="col-lg-6">
                         <div class="border rounded">
                             <img src="~/Hinh/HangHoa/@Model.Hinh"
                                  class="img-fluid rounded"
                                  alt="@Model.TenHH"
                                  title="@Model.TenHH"
-                                 itemprop="image">
+                                 itemprop="image"
+                                 style="width: 100%; height: auto;">
                         </div>
                     </div>
+
+                    <!-- Product Info -->
                     <div class="col-lg-6">
                         <h4 class="fw-bold mb-3" itemprop="name">@Model.TenHH</h4>
-                        <p class="mb-3">Category: @Model.TenLoai</p>
-                        <h5 class="fw-bold mb-3" itemprop="price">
-                            $ @Model.DonGia
+                        <p class="mb-3">
+                            <span class="badge bg-primary">@Model.TenLoai</span>
+                        </p>
+                        <h5 class="fw-bold mb-3 text-danger" itemprop="price">
+                            @Model.DonGia.ToString("N0")₫
                             <meta itemprop="priceCurrency" content="VND">
                         </h5>
                         <div class="d-flex mb-4">
@@ -109,54 +121,104 @@
                         </div>
                         <p class="mb-4" itemprop="description">@Model.MoTaNgan</p>
 
-                        <!-- Social Share Buttons - THÊM MỚI -->
-                        <div class="mb-3">
-                            <h6>Chia sẻ:</h6>
-                            <div class="d-flex gap-2">
-                                <a href="https://www.facebook.com/sharer/sharer.php?u=@Model.OgUrl"
-                                   target="_blank"
-                                   class="btn btn-primary btn-sm"
-                                   rel="noopener noreferrer">
+                        <!-- Social Share Buttons -->
+                        <div class="mb-4 p-3 border rounded bg-light">
+                            <h6 class="fw-bold mb-3">
+                                <i class="fas fa-share-alt text-primary"></i> Chia sẻ sản phẩm:
+                            </h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                <!-- Facebook Share Button -->
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        onclick="shareFacebook('@Model.OgUrl')"
+                                        title="Chia sẻ lên Facebook">
                                     <i class="fab fa-facebook-f"></i> Facebook
-                                </a>
-                                <a href="https://twitter.com/intent/tweet?url=@Model.OgUrl&text=@Model.TwitterTitle"
+                                </button>
+
+                                <!-- Twitter Share Button -->
+                                <a href="https://twitter.com/intent/tweet?url=@Uri.EscapeDataString(Model.OgUrl)&text=@Uri.EscapeDataString(Model.TwitterTitle)"
                                    target="_blank"
-                                   class="btn btn-info btn-sm text-white"
-                                   rel="noopener noreferrer">
+                                   class="btn btn-info text-white"
+                                   rel="noopener noreferrer"
+                                   title="Chia sẻ lên Twitter">
                                     <i class="fab fa-twitter"></i> Twitter
                                 </a>
-                                <button class="btn btn-secondary btn-sm" onclick="copyLink('@Model.CanonicalUrl')">
-                                    <i class="fas fa-link"></i> Copy
+
+                                <!-- Copy Link Button -->
+                                <button type="button"
+                                        class="btn btn-secondary"
+                                        onclick="copyProductLink('@Model.CanonicalUrl')"
+                                        title="Copy link sản phẩm">
+                                    <i class="fas fa-link"></i> Copy Link
                                 </button>
+
+                                <!-- Facebook Messenger Share (Mobile) -->
+                                <a href="fb-messenger://share/?link=@Uri.EscapeDataString(Model.OgUrl)"
+                                   class="btn btn-outline-primary d-md-none"
+                                   title="Gửi qua Messenger">
+                                    <i class="fab fa-facebook-messenger"></i> Messenger
+                                </a>
+                            </div>
+
+                            <!-- Link preview -->
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-link"></i>
+                                    <span id="productLink">@Model.CanonicalUrl</span>
+                                </small>
                             </div>
                         </div>
 
-                        <form asp-action="AddToCart" asp-controller="Cart" asp-route-id="@Model.MaHH">
-                            <div class="input-group quantity mb-5" style="width: 100px;">
-                                <div class="input-group-btn">
-                                    <button class="btn btn-sm btn-minus rounded-circle bg-light border" type="button">
-                                        <i class="fa fa-minus"></i>
-                                    </button>
-                                </div>
-                                <input type="text" class="form-control form-control-sm text-center border-0" value="1" name="quantity">
-                                <div class="input-group-btn">
-                                    <button class="btn btn-sm btn-plus rounded-circle bg-light border" type="button">
-                                        <i class="fa fa-plus"></i>
-                                    </button>
-                                </div>
+                        <!-- ✅ FIX: Add to Cart Form -->
+                        <form asp-action="AddToCart" asp-controller="Cart" asp-route-id="@Model.MaHH" method="post" id="addToCartForm">
+                            <div class="input-group quantity mb-4" style="width: 150px;">
+                                <!-- ✅ QUAN TRỌNG: type="button" để KHÔNG submit form -->
+                                <button class="btn btn-sm btn-minus rounded-circle bg-light border"
+                                        type="button"
+                                        id="btnMinus">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+
+                                <input type="number"
+                                       id="quantityInput"
+                                       class="form-control form-control-sm text-center border-0"
+                                       value="1"
+                                       min="1"
+                                       max="@Model.SoLuongTon"
+                                       name="quantity"
+                                       readonly>
+
+                                <!-- ✅ QUAN TRỌNG: type="button" để KHÔNG submit form -->
+                                <button class="btn btn-sm btn-plus rounded-circle bg-light border"
+                                        type="button"
+                                        id="btnPlus">
+                                    <i class="fa fa-plus"></i>
+                                </button>
                             </div>
-                            <button type="submit" class="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary">
-                                <i class="fa fa-shopping-bag me-2 text-primary"></i> Mua hàng
+
+                            <!-- ✅ CHỈ NÚT NÀY MỚI SUBMIT FORM -->
+                            <button type="submit"
+                                    class="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary"
+                                    id="btnAddToCart">
+                                <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ hàng
                             </button>
+
+                            <!-- Stock Info -->
+                            <div class="alert alert-success" role="alert">
+                                <i class="fas fa-check-circle"></i>
+                                Còn hàng: <strong>@Model.SoLuongTon</strong> sản phẩm
+                            </div>
                         </form>
                     </div>
+
+                    <!-- Product Details Tabs -->
                     <div class="col-lg-12">
                         <nav>
                             <div class="nav nav-tabs mb-3">
                                 <button class="nav-link active border-white border-bottom-0" type="button" role="tab"
                                         id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about"
                                         aria-controls="nav-about" aria-selected="true">
-                                    Thông tin hàng hóa
+                                    Thông tin sản phẩm
                                 </button>
                                 <button class="nav-link border-white border-bottom-0" type="button" role="tab"
                                         id="nav-mission-tab" data-bs-toggle="tab" data-bs-target="#nav-mission"
@@ -167,11 +229,13 @@
                         </nav>
                         <div class="tab-content mb-5">
                             <div class="tab-pane active" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab">
-                                @Html.Raw(Model.MoTa)
+                                <div class="product-description">
+                                    @Html.Raw(Model.MoTa)
+                                </div>
                             </div>
                             <div class="tab-pane" id="nav-mission" role="tabpanel" aria-labelledby="nav-mission-tab">
                                 <div class="d-flex">
-                                    <img src="~/img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
+                                    <img src="~/img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="Customer Avatar">
                                     <div class="">
                                         <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
                                         <div class="d-flex justify-content-between">
@@ -185,36 +249,38 @@
                                             </div>
                                         </div>
                                         <p>
-                                            The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic
-                                            words etc. Susp endisse ultricies nisi vel quam suscipit
+                                            Sản phẩm rất tốt, chất lượng cao. Giao hàng nhanh, đóng gói cẩn thận.
+                                            Sẽ quay lại mua tiếp ở shop!
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Review Form -->
                     <form action="#">
-                        <h4 class="mb-5 fw-bold">Leave a Reply</h4>
+                        <h4 class="mb-5 fw-bold">Để lại đánh giá</h4>
                         <div class="row g-4">
                             <div class="col-lg-6">
                                 <div class="border-bottom rounded">
-                                    <input type="text" class="form-control border-0 me-4" placeholder="Your Name *">
+                                    <input type="text" class="form-control border-0 me-4" placeholder="Tên của bạn *">
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="border-bottom rounded">
-                                    <input type="email" class="form-control border-0" placeholder="Your Email *">
+                                    <input type="email" class="form-control border-0" placeholder="Email của bạn *">
                                 </div>
                             </div>
                             <div class="col-lg-12">
                                 <div class="border-bottom rounded my-4">
-                                    <textarea name="" id="" class="form-control border-0" cols="30" rows="8" placeholder="Your Review *" spellcheck="false"></textarea>
+                                    <textarea name="" id="" class="form-control border-0" cols="30" rows="8" placeholder="Đánh giá của bạn *" spellcheck="false"></textarea>
                                 </div>
                             </div>
                             <div class="col-lg-12">
                                 <div class="d-flex justify-content-between py-3 mb-5">
                                     <div class="d-flex align-items-center">
-                                        <p class="mb-0 me-3">Please rate:</p>
+                                        <p class="mb-0 me-3">Đánh giá:</p>
                                         <div class="d-flex align-items-center" style="font-size: 12px;">
                                             <i class="fa fa-star text-muted"></i>
                                             <i class="fa fa-star"></i>
@@ -223,34 +289,276 @@
                                             <i class="fa fa-star"></i>
                                         </div>
                                     </div>
-                                    <a href="#" class="btn border border-secondary text-primary rounded-pill px-4 py-3"> Post Comment</a>
+                                    <a href="#" class="btn border border-secondary text-primary rounded-pill px-4 py-3">Gửi đánh giá</a>
                                 </div>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
+
+            <!-- Sidebar -->
             <div class="col-lg-4 col-xl-3">
                 <div class="row g-4 fruite">
                     <div class="col-lg-12">
                         @await Html.PartialAsync("_TimKiemPanel")
                         @await Component.InvokeAsync("MenuLoai")
                     </div>
-                    <!-- Featured products section giữ nguyên -->
                 </div>
             </div>
         </div>
-
-        <!-- Related products section giữ nguyên -->
     </div>
 </div>
 <!-- Single Product End -->
 @section Scripts {
     <script>
-        function copyLink(url) {
-            navigator.clipboard.writeText(url).then(() => {
-                alert('Đã copy link sản phẩm!');
-            });
+        // ============ GLOBAL VARIABLES ============
+        let isSubmitting = false;
+
+        // ============ DOM READY ============
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ Product Detail page loaded');
+
+            // Get elements
+            const quantityInput = document.getElementById('quantityInput');
+            const btnPlus = document.getElementById('btnPlus');
+            const btnMinus = document.getElementById('btnMinus');
+            const addToCartForm = document.getElementById('addToCartForm');
+            const btnAddToCart = document.getElementById('btnAddToCart');
+
+            // ✅ FIX: TĂNG SỐ LƯỢNG
+            if (btnPlus) {
+                btnPlus.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const currentVal = parseInt(quantityInput.value) || 1;
+                    const maxVal = parseInt(quantityInput.max) || 99;
+
+                    if (currentVal < maxVal) {
+                        quantityInput.value = currentVal + 1;
+                    }
+
+                    console.log('➕ Quantity:', quantityInput.value);
+                });
+            }
+
+            // ✅ FIX: GIẢM SỐ LƯỢNG
+            if (btnMinus) {
+                btnMinus.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const currentVal = parseInt(quantityInput.value) || 1;
+                    const minVal = parseInt(quantityInput.min) || 1;
+
+                    if (currentVal > minVal) {
+                        quantityInput.value = currentVal - 1;
+                    }
+
+                    console.log('➖ Quantity:', quantityInput.value);
+                });
+            }
+
+            // ✅ VALIDATE INPUT
+            if (quantityInput) {
+                quantityInput.addEventListener('change', function() {
+                    const value = parseInt(this.value);
+                    const min = parseInt(this.min) || 1;
+                    const max = parseInt(this.max) || 99;
+
+                    if (isNaN(value) || value < min) this.value = min;
+                    if (value > max) this.value = max;
+                });
+
+                // Chặn nhập ký tự không phải số
+                quantityInput.addEventListener('keypress', function(e) {
+                    if (e.which < 48 || e.which > 57) {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            // ✅ PREVENT DOUBLE SUBMIT
+            if (addToCartForm) {
+                addToCartForm.addEventListener('submit', function(e) {
+                    if (isSubmitting) {
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    isSubmitting = true;
+
+                    // Disable button và hiển thị loading
+                    if (btnAddToCart) {
+                        btnAddToCart.disabled = true;
+                        btnAddToCart.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang thêm...';
+                    }
+
+                    console.log('🛒 Adding to cart:', quantityInput.value);
+
+                    // Form sẽ submit bình thường
+                    return true;
+                });
+            }
+        });
+
+        // ============ FACEBOOK SHARE ============
+        function shareFacebook(url) {
+            const shareUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url);
+            const windowFeatures = 'width=800,height=600,left=200,top=100,resizable=yes,scrollbars=yes';
+
+            window.open(shareUrl, 'facebook-share-dialog', windowFeatures);
+
+            console.log('📤 Sharing URL:', url);
+            console.log('🔍 Facebook Debugger:', 'https://developers.facebook.com/tools/debug/?q=' + encodeURIComponent(url));
+        }
+
+        // ============ COPY LINK ============
+        function copyProductLink(url) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url)
+                    .then(() => {
+                        showCopyNotification('success');
+                    })
+                    .catch(err => {
+                        console.error('❌ Copy error:', err);
+                        fallbackCopy(url);
+                    });
+            } else {
+                fallbackCopy(url);
+            }
+        }
+
+        // Fallback copy method
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopyNotification('success');
+                } else {
+                    showCopyNotification('error');
+                }
+            } catch (err) {
+                console.error('❌ Fallback copy failed:', err);
+                showCopyNotification('error');
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        // Show copy notification
+        function showCopyNotification(status) {
+            if (status === 'success') {
+                // Highlight link
+                const linkElement = document.getElementById('productLink');
+                if (linkElement) {
+                    linkElement.style.backgroundColor = '#d4edda';
+                    linkElement.style.padding = '2px 5px';
+                    linkElement.style.borderRadius = '3px';
+
+                    setTimeout(() => {
+                        linkElement.style.backgroundColor = '';
+                    }, 2000);
+                }
+
+                // Show alert
+                alert('✅ Đã copy link sản phẩm vào clipboard!');
+            } else {
+                alert('❌ Không thể copy link. Vui lòng copy thủ công.');
+            }
         }
     </script>
 }
+
+<style>
+    /* ============ PRODUCT DESCRIPTION ============ */
+    .product-description {
+        line-height: 1.8;
+        font-size: 15px;
+    }
+
+        .product-description img {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+        }
+
+    /* ============ SOCIAL SHARE ============ */
+    .btn-facebook {
+        background-color: #1877f2;
+        border-color: #1877f2;
+        color: white;
+    }
+
+        .btn-facebook:hover {
+            background-color: #145dbf;
+            border-color: #145dbf;
+            color: white;
+        }
+
+    #productLink {
+        transition: background-color 0.3s ease;
+        display: inline-block;
+    }
+
+    /* ============ QUANTITY CONTROLS ============ */
+    .quantity .btn-plus,
+    .quantity .btn-minus {
+        width: 35px;
+        height: 35px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .quantity .btn-plus:hover,
+        .quantity .btn-minus:hover {
+            background-color: #e9ecef !important;
+            transform: scale(1.1);
+        }
+
+    .quantity input[type="number"] {
+        -webkit-appearance: none;
+        -moz-appearance: textfield;
+        text-align: center;
+    }
+
+        .quantity input[type="number"]::-webkit-inner-spin-button,
+        .quantity input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+    /* ============ LOADING SPINNER ============ */
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.15em;
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @@media (max-width: 768px) {
+        .social-share-box .btn
+
+    {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .quantity {
+        width: 130px !important;
+    }
+
+    }</style>

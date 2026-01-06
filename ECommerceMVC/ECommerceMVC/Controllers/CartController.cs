@@ -34,6 +34,7 @@ namespace ECommerceMVC.Controllers
             return View(Cart);
         }
 
+        // ✅ THÊM SẢN PHẨM VÀO GIỎ - XÓA VOUCHER
         public IActionResult AddToCart(int id, int quantity = 1)
         {
             var cart = Cart;
@@ -60,9 +61,44 @@ namespace ECommerceMVC.Controllers
             }
 
             HttpContext.Session.Set(MySetting.CART_KEY, cart);
+
+            // ✅ XÓA VOUCHER KHI GIỎ HÀNG THAY ĐỔI
+            HttpContext.Session.Remove("AppliedVoucher");
+            HttpContext.Session.Remove("VoucherDiscount");
+
+            TempData["CartMessage"] = "Đã thêm sản phẩm vào giỏ hàng!";
             return RedirectToAction("Index");
         }
 
+        // ✅ CẬP NHẬT SỐ LƯỢNG - XÓA VOUCHER
+        [HttpPost]
+        public IActionResult UpdateQuantity(int id, int quantity)
+        {
+            var cart = Cart;
+            var item = cart.SingleOrDefault(p => p.MaHh == id);
+
+            if (item != null)
+            {
+                if (quantity > 0)
+                {
+                    item.SoLuong = quantity;
+                }
+                else
+                {
+                    cart.Remove(item);
+                }
+
+                HttpContext.Session.Set(MySetting.CART_KEY, cart);
+
+                // ✅ XÓA VOUCHER KHI SỐ LƯỢNG THAY ĐỔI
+                HttpContext.Session.Remove("AppliedVoucher");
+                HttpContext.Session.Remove("VoucherDiscount");
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        // ✅ XÓA SẢN PHẨM - XÓA VOUCHER
         public IActionResult RemoveCart(int id)
         {
             var cart = Cart;
@@ -71,6 +107,12 @@ namespace ECommerceMVC.Controllers
             {
                 cart.Remove(item);
                 HttpContext.Session.Set(MySetting.CART_KEY, cart);
+
+                // ✅ XÓA VOUCHER KHI XÓA SẢN PHẨM
+                HttpContext.Session.Remove("AppliedVoucher");
+                HttpContext.Session.Remove("VoucherDiscount");
+
+                TempData["CartMessage"] = "Đã xóa sản phẩm khỏi giỏ hàng!";
             }
             return RedirectToAction("Index");
         }
@@ -160,7 +202,6 @@ namespace ECommerceMVC.Controllers
 
             if (model.GiongKhachHang)
             {
-                // Lấy thông tin từ database
                 var customer = await db.KhachHangs.FindAsync(customerId);
                 if (customer == null)
                 {
@@ -176,7 +217,6 @@ namespace ECommerceMVC.Controllers
             }
             else
             {
-                // Validate thông tin từ form
                 if (string.IsNullOrWhiteSpace(model.HoTen) ||
                     string.IsNullOrWhiteSpace(model.DiaChi) ||
                     string.IsNullOrWhiteSpace(model.DienThoai))
@@ -293,7 +333,6 @@ namespace ECommerceMVC.Controllers
             {
                 db.Database.RollbackTransaction();
 
-                // ✅ LOG CHI TIẾT LỖI
                 var errorMsg = $"Error: {ex.Message}";
                 if (ex.InnerException != null)
                     errorMsg += $"\nInner: {ex.InnerException.Message}";
@@ -308,7 +347,7 @@ namespace ECommerceMVC.Controllers
             }
         }
 
-        // ================== VNPAY CALLBACK ==================
+        // ================== VNPAY & PAYPAL (giữ nguyên) ==================
         [HttpGet]
         public async Task<IActionResult> PaymentCallBack()
         {
@@ -407,7 +446,6 @@ namespace ECommerceMVC.Controllers
             {
                 db.Database.RollbackTransaction();
 
-                // ✅ LOG CHI TIẾT LỖI
                 var errorMsg = $"Error: {ex.Message}";
                 if (ex.InnerException != null)
                     errorMsg += $" | Inner: {ex.InnerException.Message}";
@@ -417,9 +455,6 @@ namespace ECommerceMVC.Controllers
                 return View("PaymentFail");
             }
         }
-
-        // ==================== FIX PAYPAL PAYMENT ====================
-        // Thay thế method CreatePaypalOrder và CapturePaypalOrder trong CartController.cs
 
         [HttpPost]
         public async Task<IActionResult> CreatePaypalOrder()
@@ -432,7 +467,6 @@ namespace ECommerceMVC.Controllers
                     return BadRequest(new { message = "Giỏ hàng trống" });
                 }
 
-                // ✅ LẤY VOUCHER DISCOUNT (QUAN TRỌNG!)
                 var voucherCode = HttpContext.Session.GetString("AppliedVoucher");
                 decimal voucherDiscount = 0;
                 decimal.TryParse(
@@ -440,10 +474,7 @@ namespace ECommerceMVC.Controllers
                     out voucherDiscount
                 );
 
-                // ✅ TÍNH TỔNG SAU KHI TRỪ VOUCHER
                 decimal totalAmount = cart.Sum(p => p.ThanhTien) - voucherDiscount;
-
-                // ✅ Chuyển đổi sang USD (tỷ giá: 1 USD = 25,000 VND)
                 decimal totalUSD = totalAmount / 25000;
 
                 var reference = $"ORDER_{DateTime.Now.Ticks}";
@@ -467,7 +498,6 @@ namespace ECommerceMVC.Controllers
         {
             try
             {
-                // ✅ KHÔNG CẦN AWAIT vì CaptureOrder không phải async
                 var response = await _paypalClient.CaptureOrder(orderId);
 
                 if (response.status == "COMPLETED")
@@ -477,7 +507,6 @@ namespace ECommerceMVC.Controllers
 
                     var customer = await db.KhachHangs.FindAsync(customerId);
 
-                    // ✅ LẤY VOUCHER DISCOUNT
                     var voucherCode = HttpContext.Session.GetString("AppliedVoucher");
                     decimal voucherDiscount = 0;
                     decimal.TryParse(
@@ -521,7 +550,6 @@ namespace ECommerceMVC.Controllers
                             });
                         }
 
-                        // ✅ CẬP NHẬT VOUCHER USAGE
                         if (!string.IsNullOrEmpty(voucherCode))
                         {
                             var voucher = db.Set<Voucher>()
@@ -544,7 +572,6 @@ namespace ECommerceMVC.Controllers
                         await db.SaveChangesAsync();
                         db.Database.CommitTransaction();
 
-                        // ✅ XÓA SESSION
                         HttpContext.Session.Remove(MySetting.CART_KEY);
                         HttpContext.Session.Remove("AppliedVoucher");
                         HttpContext.Session.Remove("VoucherDiscount");
@@ -554,12 +581,9 @@ namespace ECommerceMVC.Controllers
                     catch (Exception ex)
                     {
                         db.Database.RollbackTransaction();
-
-                        // ✅ LOG CHI TIẾT
                         System.Diagnostics.Debug.WriteLine($"PayPal Error: {ex.Message}");
                         if (ex.InnerException != null)
                             System.Diagnostics.Debug.WriteLine($"Inner: {ex.InnerException.Message}");
-
                         throw;
                     }
                 }

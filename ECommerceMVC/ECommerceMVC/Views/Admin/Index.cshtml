@@ -248,27 +248,29 @@
             }
 
         @@media (max-width: 768px) {
-            .sidebar {
-                width: 80px;
-            }
+            .sidebar
 
-            .sidebar-header h2 {
-                display: none;
-            }
-
-            .menu-item span {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 80px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
+        {
+            width: 80px;
         }
 
+        .sidebar-header h2 {
+            display: none;
+        }
+
+        .menu-item span {
+            display: none;
+        }
+
+        .main-content {
+            margin-left: 80px;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        }
     </style>
 </head>
 <body>
@@ -299,6 +301,14 @@
             <a href="@Url.Action("Index", "HangHoas")" class="menu-item">
                 <i class="fas fa-store"></i>
                 <span>Quản Lý HH</span>
+            </a>
+            <a href="@Url.Action("Index", "AdminEmail")" class="menu-item">
+                <i class="fas fa-envelope"></i>
+                <span>Email Marketing</span>
+            </a>
+            <a href="@Url.Action("Index", "AdminOrder")" class="menu-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Quản Lý Đơn Hàng</span>
             </a>
             <a href="/" class="menu-item">
                 <i class="fas fa-globe"></i>
@@ -375,6 +385,22 @@
             <a href="@Url.Action("Suppliers", "Admin")" class="action-card">
                 <i class="fas fa-handshake"></i>
                 <h3>Nhà Cung Cấp</h3>
+            </a>
+            <a href="@Url.Action("Index", "AdminEmail")" class="action-card">
+                <i class="fas fa-envelope-open-text"></i>
+                <h3>Email Marketing</h3>
+            </a>
+            <a href="@Url.Action("Index", "AdminOrder")" class="action-card">
+                <i class="fas fa-clipboard-list"></i>
+                <h3>Quản Lý Đơn Hàng</h3>
+            </a>
+            <a href="@Url.Action("Index", "AdminNewsletter")" class="action-card">
+                <i class="fas fa-paper-plane"></i>
+                <h3>Newsletter</h3>
+            </a>
+            <a href="@Url.Action("Index", "HangHoas")" class="action-card">
+                <i class="fas fa-cog"></i>
+                <h3>Quản Lý HH</h3>
             </a>
         </div>
     </div>
