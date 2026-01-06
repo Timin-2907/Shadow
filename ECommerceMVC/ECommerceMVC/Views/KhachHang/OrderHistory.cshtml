@@ -4,41 +4,218 @@
     ViewData["Title"] = "Lịch sử đơn hàng";
 }
 
-<div class="container mt-5">
-    <h2>Lịch sử đơn hàng</h2>
+<div class="container-fluid py-5">
+    <div class="container">
+        <h2 class="mb-4">
+            <i class="fas fa-shopping-bag me-2"></i>Lịch sử đơn hàng
+        </h2>
 
-    @if (Model != null && Model.Any())
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Mã ĐH</th>
-                    <th>Ngày đặt</th>
-                    <th>Tổng tiền</th>
-                    <th>Thanh toán</th>
-                    <th>Trạng thái</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var order in Model)
-                {
-                    <tr>
-                        <td>#@order.MaHD</td>
-                        <td>@order.NgayDat.ToString("dd/MM/yyyy")</td>
-                        <td>@order.TongTien.ToString("N0") ₫</td>
-                        <td>@order.PhuongThucThanhToan</td>
-                        <td>@order.TrangThai</td>
-                        <td>
-                            <a asp-action="OrderDetail" asp-route-id="@order.MaHD" class="btn btn-sm btn-primary">Chi tiết</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <p>Bạn chưa có đơn hàng nào</p>
-    }
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="100">Mã ĐH</th>
+                            <th>Ngày đặt</th>
+                            <th>Sản phẩm</th>
+                            <th>Tổng tiền</th>
+                            <th>Thanh toán</th>
+                            <th>Trạng thái</th>
+                            <th width="150">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model)
+                        {
+                            <tr>
+                                <td><strong>#@order.MaHD</strong></td>
+                                <td>@order.NgayDat.ToString("dd/MM/yyyy")<br><small class="text-muted">@order.NgayDat.ToString("HH:mm")</small></td>
+                                <td>
+                                    @if (order.ChiTiet != null && order.ChiTiet.Any())
+                                    {
+                                        @if (order.ChiTiet.Count == 1)
+                                        {
+                                            <div class="d-flex align-items-center">
+                                                <img src="~/Hinh/HangHoa/@order.ChiTiet.First().Hinh"
+                                                     alt="@order.ChiTiet.First().TenHH"
+                                                     style="width: 50px; height: 50px; object-fit: cover;"
+                                                     class="rounded me-2">
+                                                <div>
+                                                    <small>@order.ChiTiet.First().TenHH</small><br>
+                                                    <small class="text-muted">SL: @order.ChiTiet.First().SoLuong</small>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="d-flex align-items-center">
+                                                <img src="~/Hinh/HangHoa/@order.ChiTiet.First().Hinh"
+                                                     alt="@order.ChiTiet.First().TenHH"
+                                                     style="width: 50px; height: 50px; object-fit: cover;"
+                                                     class="rounded me-2">
+                                                <div>
+                                                    <small>@order.ChiTiet.First().TenHH</small><br>
+                                                    <small class="text-muted">+@(order.ChiTiet.Count - 1) sản phẩm khác</small>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </td>
+                                <td>
+                                    <strong class="text-danger">@order.TongTien.ToString("N0")₫</strong>
+                                </td>
+                                <td>
+                                    @if (order.PhuongThucThanhToan == "VNPAY")
+                                    {
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-credit-card"></i> VNPay
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(order.VnPayTransactionId))
+                                        {
+                                            <br>
+                            
+                                            <small class="text-muted">@order.VnPayTransactionId</small>
+                                        }
+                                    }
+                                    else if (order.PhuongThucThanhToan == "PayPal")
+                                    {
+                                        <span class="badge bg-info">
+                                            <i class="fab fa-paypal"></i> PayPal
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-money-bill-wave"></i> COD
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var statusBadge = "secondary";
+                                        var statusIcon = "clock";
+
+                                        if (order.TrangThai.Contains("Chờ"))
+                                        {
+                                            statusBadge = "warning";
+                                            statusIcon = "clock";
+                                        }
+                                        else if (order.TrangThai.Contains("Đang") || order.TrangThai.Contains("xử lý"))
+                                        {
+                                            statusBadge = "info";
+                                            statusIcon = "spinner";
+                                        }
+                                        else if (order.TrangThai.Contains("Hoàn thành") || order.TrangThai.Contains("giao"))
+                                        {
+                                            statusBadge = "success";
+                                            statusIcon = "check-circle";
+                                        }
+                                        else if (order.TrangThai.Contains("Hủy"))
+                                        {
+                                            statusBadge = "danger";
+                                            statusIcon = "times-circle";
+                                        }
+                                    }
+                                    <span class="badge bg-@statusBadge">
+                                        <i class="fas fa-@statusIcon"></i> @order.TrangThai
+                                    </span>
+                                </td>
+                                <td>
+                                    <a asp-action="OrderDetail" asp-route-id="@order.MaHD"
+                                       class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> Chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Order Statistics -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card border-warning">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                            <h5>@Model.Count(o => o.TrangThai.Contains("Chờ"))</h5>
+                            <p class="text-muted mb-0">Chờ xử lý</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <i class="fas fa-spinner fa-2x text-info mb-2"></i>
+                            <h5>@Model.Count(o => o.TrangThai.Contains("Đang"))</h5>
+                            <p class="text-muted mb-0">Đang xử lý</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <h5>@Model.Count(o => o.TrangThai.Contains("Hoàn thành") || o.TrangThai.Contains("giao"))</h5>
+                            <p class="text-muted mb-0">Hoàn thành</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <i class="fas fa-dollar-sign fa-2x text-primary mb-2"></i>
+                            <h5>@Model.Sum(o => o.TongTien).ToString("N0")₫</h5>
+                            <p class="text-muted mb-0">Tổng chi tiêu</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-bag fa-5x text-muted mb-4"></i>
+                <h3>Bạn chưa có đơn hàng nào</h3>
+                <p class="text-muted mb-4">Hãy bắt đầu mua sắm ngay hôm nay!</p>
+                <a asp-controller="HangHoa" asp-action="Index" class="btn btn-primary rounded-pill px-5 py-3">
+                    <i class="fas fa-shopping-cart me-2"></i>Mua sắm ngay
+                </a>
+            </div>
+        }
+    </div>
 </div>
+
+<style>
+    .table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+        .table thead th {
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .table tbody tr {
+            transition: all 0.3s;
+        }
+
+            .table tbody tr:hover {
+                background-color: #f8f9fa;
+                transform: scale(1.01);
+            }
+
+    .card {
+        transition: all 0.3s;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+</style>
