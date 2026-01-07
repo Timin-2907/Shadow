@@ -110,40 +110,55 @@ namespace ECommerceMVC.Controllers
 
         // POST: /AdminOrder/UpdateStatus
         [HttpPost]
-        public async Task<IActionResult> UpdateStatus(int id, int trangThai, string? ghiChu)
+        public async Task<IActionResult> UpdateStatus([FromBody] UpdateStatusRequest request)
         {
             try
             {
-                var order = await _context.HoaDons.FindAsync(id);
+                // Tìm đơn hàng với tracking
+                var order = await _context.HoaDons
+                    .FirstOrDefaultAsync(h => h.MaHd == request.Id);
+
                 if (order == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
                 }
 
                 // Cập nhật trạng thái
-                order.MaTrangThai = trangThai;
+                order.MaTrangThai = request.TrangThai;
 
                 // Cập nhật ngày giao nếu hoàn thành
-                if (trangThai == 2) // Giả sử 2 là "Đã giao"
+                if (request.TrangThai == 2) // 2 là "Đã giao"
                 {
                     order.NgayGiao = DateTime.Now;
                 }
 
                 // Thêm ghi chú
-                if (!string.IsNullOrEmpty(ghiChu))
+                if (!string.IsNullOrEmpty(request.GhiChu))
                 {
                     var timestamp = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
                     var adminName = User.Identity?.Name ?? "Admin";
-                    var newNote = $"[{timestamp}] {adminName}: {ghiChu}";
+                    var newNote = $"[{timestamp}] {adminName}: {request.GhiChu}";
 
                     order.GhiChu = string.IsNullOrEmpty(order.GhiChu)
                         ? newNote
                         : order.GhiChu + "\n" + newNote;
                 }
 
-                await _context.SaveChangesAsync();
+                // Đánh dấu entity đã thay đổi (QUAN TRỌNG!)
+                _context.Entry(order).State = EntityState.Modified;
 
-                return Json(new { success = true, message = "Cập nhật trạng thái thành công!" });
+                // Lưu vào database
+                var result = await _context.SaveChangesAsync();
+
+                // Kiểm tra kết quả
+                if (result > 0)
+                {
+                    return Json(new { success = true, message = "Cập nhật trạng thái thành công!" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Không có thay đổi nào được lưu!" });
+                }
             }
             catch (Exception ex)
             {
@@ -285,5 +300,13 @@ namespace ECommerceMVC.Controllers
 
             return View(order);
         }
+    }
+
+    // CLASS MỚI - THÊM ĐỂ NHẬN DỮ LIỆU JSON
+    public class UpdateStatusRequest
+    {
+        public int Id { get; set; }
+        public int TrangThai { get; set; }
+        public string? GhiChu { get; set; }
     }
 }
